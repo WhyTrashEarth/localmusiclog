@@ -1,1 +1,38 @@
-:root{color-scheme:dark;font:15px/1.5 system-ui;background:#101b19;color:#effaf5}*{box-sizing:border-box}body{margin:0;width:370px;max-width:100vw}main{padding:22px}.brand{font-size:10px;letter-spacing:1.5px;color:#91dfbd}h1{font-size:26px;margin:6px 0}h2{font-size:18px;margin-top:24px}p{color:#bdd0c7}button{font:inherit;cursor:pointer;border:1px solid #80bca6;background:#244d3f;color:#fff;border-radius:8px;padding:10px 12px}button:focus-visible,a:focus-visible{outline:3px solid #f9d97b;outline-offset:3px}button:disabled{opacity:.5;cursor:default}#select{width:100%}.controls{display:flex;gap:10px;flex-wrap:wrap}#status{min-height:44px;font-size:13px}ol{padding:0;list-style:none;max-height:340px;overflow:auto}li{padding:12px 0;border-bottom:1px solid #365348}li strong,li span,li time{display:block;overflow-wrap:anywhere}li span{color:#c9dbd2}li time,footer{font-size:12px;color:#b5c9c0}footer{padding-top:18px}#count{font-size:13px;color:#b5c9c0}
+:root {
+ color-scheme: dark;
+ font: 15px/1.5 system-ui;
+ background: #101b19;
+ color: #effaf5;
+ /* Explicit root sizing avoids shrink-to-fit against a circular 100vw cap. */
+ width: 400px;
+ min-width: 360px;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; width: 100%; }
+main { padding: 20px; max-height: 580px; overflow-y: auto; overflow-wrap: anywhere; }
+.brand { font-size: 10px; letter-spacing: 1.5px; color: #91dfbd; }
+h1 { font-size: 26px; line-height: 1.2; margin: 6px 0 12px; }
+h2 { font-size: 18px; margin: 0 0 8px; }
+p { color: #bdd0c7; margin: 10px 0; }
+button { font: inherit; cursor: pointer; border: 1px solid #80bca6; background: #244d3f; color: #fff; border-radius: 8px; padding: 10px 12px; min-height: 44px; overflow-wrap: anywhere; }
+button:focus-visible { outline: 3px solid #f9d97b; outline-offset: 3px; }
+button:disabled { opacity: .5; cursor: default; }
+#select { width: 100%; }
+.controls { display: flex; gap: 10px; flex-wrap: wrap; }
+.controls button { flex: 1 1 130px; }
+#status { min-height: 40px; font-size: 13px; }
+.confirmation { margin-top: 16px; padding: 14px; border: 1px solid #d4ba7c; border-radius: 8px; background: #21332b; }
+.confirmation p { font-size: 13px; }
+.danger { background: #653333; border-color: #e5aaa4; }
+#clear-error { color: #ffd2cc; }
+#action-status:empty { display: none; }
+.history-heading { margin-top: 22px; }
+ol { padding: 0; list-style: none; margin: 0; }
+li { padding: 12px 0; border-bottom: 1px solid #365348; }
+li strong, li span, li time { display: block; overflow-wrap: anywhere; }
+li span { color: #c9dbd2; }
+li time, footer { font-size: 12px; color: #b5c9c0; }
+footer { padding-top: 18px; }
+#count { font-size: 13px; color: #b5c9c0; white-space: nowrap; }
+@media (max-width: 399px) { :root { width: 360px; } main { padding: 16px; } }

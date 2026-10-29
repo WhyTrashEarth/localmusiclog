@@ -18,7 +18,7 @@ npm run test:browser
 
 ## Download for Brave or Chrome
 
-Download the ready-to-load prototype from [downloads/local-music-log-0.1.1.zip](downloads/local-music-log-0.1.1.zip) using GitHub’s **Download raw file** button. Extract the ZIP. In Brave, open `brave://extensions` (Chrome: `chrome://extensions`), enable Developer mode, choose **Load unpacked**, and select the extracted folder containing `manifest.json`. No Node.js installation is needed for this ZIP. This is a development prototype, not a browser-store release. Live YouTube Music detection remains unverified.
+Download the ready-to-load prototype from [downloads/local-music-log-0.1.2.zip](downloads/local-music-log-0.1.2.zip) using GitHub’s **Download raw file** button. Extract the ZIP. In Brave, open `brave://extensions` (Chrome: `chrome://extensions`), enable Developer mode, choose **Load unpacked**, and select the extracted folder containing `manifest.json`. No Node.js installation is needed for this ZIP. This is a development prototype, not a browser-store release. Live YouTube Music detection remains unverified.
 
 ## Install from source
 
@@ -32,7 +32,7 @@ After refreshing/navigating the page, restarting the browser, or reloading the e
 
 ## Updating the unpacked extension
 
-Download and extract the newest ZIP into a new folder. Remove the old Local Music Log installation from `brave://extensions`, then load the new folder using **Load unpacked**. Removing the extension clears its existing local history. Confirm version **0.1.1** on the extension details page. Refresh YouTube Music, start a song, open the popup and select that tab again. You do not need to disable Brave Shields. If it still cannot log, report the exact popup status; it now names missing player fields or access failures.
+Download and extract the newest ZIP. To preserve history, **replace the files in the folder your existing unpacked extension uses**, then click that extension's **Reload** button in `brave://extensions`. Confirm version **0.1.2** on its details page. Refresh YouTube Music, start a song, open the popup and select that tab again. If logging was paused, resume it. Removing/reinstalling the extension instead will erase its local history. You do not need to disable Brave Shields. If detection fails, report the exact popup status.
 
 ## Controls and permissions
 
@@ -40,7 +40,7 @@ Download and extract the newest ZIP into a new folder. Remove the old Local Musi
 - `scripting`: install the metadata observer into that selected YouTube Music page.
 - `storage`: keep history, selection and logging state in `chrome.storage.local`.
 
-Pause logging does not pause music. Clear history deletes stored events while retaining the current playback marker to prevent immediately re-adding the same play. The newest 300 events are retained; older entries are removed first. Timestamps mean **observed at**, not the exact start time of a song already playing when selection occurs.
+Pause logging does not pause music. Clear history opens an inline confirmation panel with **Keep history** and **Delete history** controls. Escape cancels; keyboard focus is not trapped and no native browser dialog is opened. Successful deletion announces its result; a failed deletion leaves a retry option. Clear history deletes stored events while retaining the current playback marker to prevent immediately re-adding the same play. The newest 300 events are retained; older entries are removed first. Timestamps mean **observed at**, not the exact start time of a song already playing when selection occurs.
 
 ## Metadata feasibility gate
 
@@ -60,6 +60,10 @@ Fixture tests validate the implementation against simulated DOM data, not YouTub
 ## Privacy
 
 No microphone, audio recording, recognition service, analytics, ads, cloud backup or export. The extension makes no application network requests. Metadata and playback observations pass from the selected page to the extension; history remains in browser-local extension storage. Storage is not encrypted by this app. Other people with access to your browser profile may access it. Clear history removes events; uninstalling removes extension storage. Browser loading of YouTube Music itself remains subject to that site's behavior.
+
+## Version 0.1.2
+
+Replaces the blocking native clear-history confirmation, reported to leave Brave unresponsive, with an inline panel. Fixes popup shrink-to-fit sizing, uses a single scrolling region, and keeps keyboard focus on usable controls after cancellation or deletion. `npm run test:ui` exercises the actual popup HTML/CSS/JavaScript in Chromium with mocked extension APIs: 300 entries, cancellation, Escape, keyboard confirmation, cross-tab typing, storage failure/retry, successful deletion, pause, and 360/400px layouts. This does not substitute for a full Brave extension check.
 
 ## Version 0.1.1
 

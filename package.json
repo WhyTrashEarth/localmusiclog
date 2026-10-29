@@ -1,13 +1,14 @@
 {
   "name": "local-music-log",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "tsc && node scripts/build.mjs",
     "test": "npm run build && node tests/history.test.mjs && node tests/observer.test.mjs && node tests/detection.test.mjs && node tests/background.test.mjs",
     "test:browser": "node scripts/browser-smoke.mjs",
-    "test:player": "node scripts/player-smoke.mjs"
+    "test:player": "node scripts/player-smoke.mjs",
+    "test:ui": "node scripts/popup-smoke.mjs"
   },
   "devDependencies": {
     "@types/chrome": "0.1.24",
