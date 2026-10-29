@@ -2,7 +2,7 @@
 
 WhyTrashEarth · Codex x TwitchCon Hackathon 2026
 
-A local-first Chromium Manifest V3 extension for recording tracks from a YouTube Music tab you explicitly select. **Phase 1 prototype; live YouTube Music detection is not yet verified.** Twitch integration is not implemented.
+A local-first Chromium Manifest V3 extension for an explicitly selected YouTube Music or YouTube tab. **Development prototype:** YouTube Music logging and repeat-one have been confirmed by the user in Brave. Regular YouTube watch-page support is new and awaits live-browser verification. Twitch integration is not implemented.
 
 ## Develop
 
@@ -18,29 +18,37 @@ npm run test:browser
 
 ## Download for Brave or Chrome
 
-Download the ready-to-load prototype from [downloads/local-music-log-0.1.7.zip](downloads/local-music-log-0.1.7.zip) using GitHub’s **Download raw file** button. Extract the ZIP. In Brave, open `brave://extensions` (Chrome: `chrome://extensions`), enable Developer mode, choose **Load unpacked**, and select the extracted folder containing `manifest.json`. No Node.js installation is needed for this ZIP. This is a development prototype, not a browser-store release. Live YouTube Music detection remains unverified.
+Download the ready-to-load prototype from [downloads/local-music-log-0.1.8.zip](downloads/local-music-log-0.1.8.zip) using GitHub’s **Download raw file** button. Extract the ZIP. In Brave, open `brave://extensions` (Chrome: `chrome://extensions`), enable Developer mode, choose **Load unpacked**, and select the extracted folder containing `manifest.json`. No Node.js installation is needed for this ZIP. This is a development prototype, not a browser-store release. Regular YouTube detection still needs live-browser verification.
 
 ## Install from source
 
 1. Run `npm run build`.
 2. Open Chrome's extension management page, enable Developer mode, and choose **Load unpacked**.
 3. Select this project's `dist` folder.
-4. Open YouTube Music, open the extension popup, and press **Use this YouTube Music tab**.
+4. Open YouTube Music or a regular YouTube watch page, open the extension popup, and press **Use this YouTube / Music tab**.
 5. Play a song. Wait for valid player metadata; reopen the popup to see history.
 
 After refreshing/navigating the page, restarting the browser, or reloading the extension, select the tab again. There is no persistent website host permission and no automatic injection into other tabs.
 
 ## Updating the unpacked extension
 
-Download and extract the newest ZIP. To preserve history, **replace the files in the folder your existing unpacked extension uses**, then click that extension's **Reload** button in `brave://extensions`. Confirm version **0.1.7** on its details page. Refresh YouTube Music, start a song, open the popup and select that tab again. If logging was paused, resume it. Removing/reinstalling the extension instead will erase its local history. You do not need to disable Brave Shields. If detection fails, report the exact popup status.
+Download and extract the newest ZIP. To preserve history, **replace the files in the folder your existing unpacked extension uses**, then click that extension's **Reload** button in `brave://extensions`. Confirm version **0.1.8** on its details page. Refresh YouTube Music, start a song, open the popup and select that tab again. If logging was paused, resume it. Removing/reinstalling the extension instead will erase its local history. You do not need to disable Brave Shields. If detection fails, report the exact popup status.
 
 ## Controls and permissions
 
 - `activeTab`: temporary access to the tab you select through the extension action.
-- `scripting`: install the metadata observer into that selected YouTube Music page.
+- `scripting`: install the metadata observer into that selected YouTube Music or YouTube page.
 - `storage`: keep history, selection and logging state in `chrome.storage.local`.
 
 Pause logging does not pause music. Clear history opens an inline confirmation panel with **Keep history** and **Delete history** controls. Escape cancels; keyboard focus is not trapped and no native browser dialog is opened. Successful deletion announces its result; a failed deletion leaves a retry option. Clear history deletes stored events while retaining the current playback marker to prevent immediately re-adding the same play. The newest 300 events are retained; older entries are removed first. Timestamps mean **observed at**, not the exact start time of a song already playing when selection occurs.
+
+## Regular YouTube test workflow
+
+Open a normal `https://www.youtube.com/watch?v=...` video, select it through the popup, then start playback. Entries show the video title and **YouTube video · Channel: [uploader]**. The uploader is not stored as a song artist and the title is not parsed into guessed music credits. The stored `kind` is `youtube-video`, `artist` is empty, and `channel` contains the page-provided uploader. Existing YouTube Music history is retained.
+
+Try continuous playback, pause/resume, a seek, a second video and return to the first, YouTube's Loop control, then pause logging and clear history. Keep the popup closed during part of the test. Check that ads are skipped when detectable, and report the popup status/diagnostics if logging stalls. Select only one source tab at a time. No new permissions, secrets or remote services are required.
+
+This test build supports standard watch pages only. Shorts, embedded players, live video (and videos the player marks as live content), and background miniplayer playback while browsing non-watch pages are excluded. Unavailable or mismatched metadata causes a waiting state. Navigation within YouTube is supported by observing the new player identity; a full document reload requires reselection.
 
 ## Metadata feasibility gate
 
@@ -60,6 +68,10 @@ Fixture tests validate the implementation against simulated DOM data, not YouTub
 ## Privacy
 
 No microphone, audio recording, recognition service, analytics, ads, cloud backup or export. The extension makes no application network requests. Metadata and playback observations pass from the selected page to the extension; history remains in browser-local extension storage. Storage is not encrypted by this app. Other people with access to your browser profile may access it. Clear history removes events; uninstalling removes extension storage. Browser loading of YouTube Music itself remains subject to that site's behavior.
+
+## Version 0.1.8
+
+Adds explicitly selected regular YouTube watch pages using the existing playback tracker and recorder. Introduces video/channel attribution without inferred song artists, exact-origin sender validation for supported YouTube domains, and a navigation identity check to avoid recording stale metadata. Changes the popup heading to Recent plays. Tests include regular YouTube detection, unsupported live/Shorts states, source validation, worker/storage integration, channel display, and preservation of repeat buffering behavior. User confirmed v0.1.7 repeat-one history entries in Brave; this broader source build still needs a live test.
 
 ## Version 0.1.7
 

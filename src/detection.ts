@@ -3,28 +3,33 @@ export interface Detection { sample: Sample | null; status: string; diagnostics?
 // Executed in the selected page's MAIN world by chrome.scripting. Keep this
 // function self-contained: browser serialization does not retain module scope.
 export function detectPlayer(): Detection {
+ const regular=['https://www.youtube.com','https://youtube.com'].includes(new URL(location.href).origin);
+ if(regular && new URL(location.href).pathname!=='/watch')return {sample:null,status:'Open a YouTube watch page. Shorts and live streams are not supported in this test build.'};
  const bar = document.querySelector('ytmusic-player-bar');
- const media = document.querySelector<HTMLMediaElement>('ytmusic-player video, #movie_player video, video');
- type VideoData = { video_id?: string; title?: string; author?: string; is_ad?: boolean };
+ const media = regular?document.querySelector<HTMLMediaElement>('#movie_player video'):(document.querySelector<HTMLMediaElement>('ytmusic-player video') || document.querySelector<HTMLMediaElement>('#movie_player video') || document.querySelector<HTMLMediaElement>('video'));
+ type VideoData = { video_id?: string; title?: string; author?: string; is_ad?: boolean; isLive?: boolean; isLiveContent?: boolean };
  const player = document.querySelector('#movie_player') as (Element & { getVideoData?: () => VideoData; getCurrentTime?: () => number; getDuration?: () => number; getPlayerResponse?: () => { videoDetails?: {videoId?: string; lengthSeconds?: string | number} } }) | null;
  let data: VideoData | undefined;
  try { data = player?.getVideoData?.(); } catch { /* DOM fallback below */ }
+ if(regular && (data?.isLive || data?.isLiveContent))return {sample:null,status:'Live video is not supported in this test build.'};
  if (data?.is_ad || document.querySelector('#movie_player.ad-showing')) return {sample:null,status:'Advertisement detected. Waiting for music.'};
  const text = (value: unknown) => typeof value === 'string' ? value.trim() : '';
  const metadata = navigator.mediaSession?.metadata;
- const title = text(data?.title) || text(bar?.querySelector('.title')?.textContent) || text(metadata?.title);
+ const title = text(data?.title) || (regular?text(document.querySelector('ytd-watch-metadata h1 yt-formatted-string')?.textContent):text(bar?.querySelector('.title')?.textContent) || text(metadata?.title));
  // YouTube Music artist links may use /browse/ rather than /channel/.
  const artistLink = bar?.querySelector('a[href*="channel/"], .byline a[href*="browse/"], .subtitle a[href*="browse/"]');
- const artist = text(data?.author) || text(artistLink?.textContent) || text(metadata?.artist);
+ const channel=regular?(text(data?.author) || text(document.querySelector('ytd-video-owner-renderer #channel-name a, #owner #channel-name a')?.textContent)):undefined;
+ const artist = regular?'':text(data?.author) || text(artistLink?.textContent) || text(metadata?.artist);
  let videoId = text(data?.video_id);
  if(!videoId) {
   const link = bar?.querySelector<HTMLAnchorElement>('a[href*="watch?v="], a[href*="watch?"][href*="v="]');
   try {
    const url = new URL(link?.href || location.href,location.href);
-   if(url.origin==='https://music.youtube.com' && url.pathname==='/watch') videoId=text(url.searchParams.get('v'));
+   if((url.origin==='https://music.youtube.com' || (regular && ['https://www.youtube.com','https://youtube.com'].includes(url.origin))) && url.pathname==='/watch') videoId=text(url.searchParams.get('v'));
   } catch { /* Missing identity must not produce a fabricated track. */ }
  }
- const missing = [!bar && 'player bar',!title && 'title',!artist && 'artist',!videoId && 'track ID',!media && 'playback element'].filter(Boolean);
+ if(regular && videoId!==new URL(location.href).searchParams.get('v'))return {sample:null,status:'Waiting for the selected video player to finish navigating.'};
+ const missing = [!regular && !bar && 'player bar',!title && 'title',regular?!channel && 'channel':!artist && 'artist',!videoId && 'track ID',!media && 'playback element'].filter(Boolean);
  if(missing.length) return {sample:null,status:`Waiting for ${missing.join(', ')}. No track recorded.`};
  if(!/^[A-Za-z0-9_-]{1,128}$/.test(videoId)) return {sample:null,status:'Waiting for a valid track ID. No track recorded.'};
  // MediaSource duration may describe a growing stream rather than the song.
@@ -109,5 +114,5 @@ export function detectPlayer(): Detection {
  // Reconcile a track change even if no media event fired during that transition.
  if(tracker.source!==videoId){tracker.source=videoId;tracker.endedSource=null;}
  const playing = !media!.paused && !media!.ended && media!.readyState>=2;
- return {sample:{title,artist,source:`https://music.youtube.com/watch?v=${videoId}`,playing,position:observed.position,duration:observed.duration,ended:media!.ended,playbackCycle:`${tracker.token}:${tracker.cycle}`},status:playing?'Listening to the selected tab.':'Playback paused or buffering.',diagnostics:`Tracker v${tracker.version} · Position ${observed.position.toFixed(1)} / ${observed.duration?observed.duration.toFixed(1):'?'} seconds · Clock ${observed.clockSource} · Duration ${observed.durationSource} · Raw media duration ${Number.isFinite(media!.duration)?media!.duration.toFixed(1):'?'} · Native loop ${media!.loop?'on':'off'} · Restarts ${tracker.cycle} · Last event ${tracker.lastEvent} · ${tracker.restartReason} · Media bindings ${tracker.bindings} · Recent transitions: ${tracker.transitions.length?tracker.transitions.join(' | '):'none observed yet'}`};
+ return {sample:{title,artist,source:`https://${regular?'www.youtube.com':'music.youtube.com'}/watch?v=${videoId}`,kind:regular?'youtube-video':'youtube-music',...(regular?{channel}:{}),playing,position:observed.position,duration:observed.duration,ended:media!.ended,playbackCycle:`${tracker.token}:${tracker.cycle}`},status:playing?'Listening to the selected tab.':'Playback paused or buffering.',diagnostics:`Tracker v${tracker.version} · Position ${observed.position.toFixed(1)} / ${observed.duration?observed.duration.toFixed(1):'?'} seconds · Clock ${observed.clockSource} · Duration ${observed.durationSource} · Raw media duration ${Number.isFinite(media!.duration)?media!.duration.toFixed(1):'?'} · Native loop ${media!.loop?'on':'off'} · Restarts ${tracker.cycle} · Last event ${tracker.lastEvent} · ${tracker.restartReason} · Media bindings ${tracker.bindings} · Recent transitions: ${tracker.transitions.length?tracker.transitions.join(' | '):'none observed yet'}`};
 }

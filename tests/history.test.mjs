@@ -70,3 +70,14 @@ test('legacy stored state migrates without duplicating its current playback',()=
  s=record(s,sample({playbackCycle:'session:1',playing:false}));
  s=record(s,sample({playbackCycle:'session:1',playing:true}));assert.equal(s.history.length,2);
 });
+test('YouTube entries preserve video/channel attribution and repeat buffering behavior',()=>{
+ const video=sample({source:'https://www.youtube.com/watch?v=abc',kind:'youtube-video',artist:'',channel:'Uploader',playbackCycle:'yt:0'});
+ assert.equal(validSample(video),true);
+ assert.equal(validSample({...video,channel:''}),false);
+ assert.equal(validSample({...video,artist:'Guessed artist'}),false);
+ assert.equal(validSample({...video,source:'https://youtube.com.evil.test/watch?v=abc'}),false);
+ let s=record(initialState(),video);
+ s=record(s,{...video,playing:false,playbackCycle:'yt:1'});
+ s=record(s,{...video,playing:true,playbackCycle:'yt:1'});
+ assert.equal(s.history.length,2);assert.equal(s.history[1].artist,'');assert.equal(s.history[1].channel,'Uploader');assert.equal(s.history[1].kind,'youtube-video');
+});

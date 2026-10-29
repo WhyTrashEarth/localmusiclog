@@ -12,13 +12,13 @@ try {
  const worker=context.serviceWorkers()[0] ?? await context.waitForEvent('serviceworker',{timeout:15000});
  const id=new URL(worker.url()).host;
  const page=await context.newPage();await page.goto(`chrome-extension://${id}/popup.html`);
- await page.getByText('Choose a YouTube Music tab to begin.').waitFor();
+ await page.getByText('Choose a YouTube Music or YouTube tab to begin.').waitFor();
  await page.getByRole('button',{name:'Pause logging'}).click();
  await page.getByRole('button',{name:'Resume logging'}).waitFor();
  await page.reload();await page.getByRole('button',{name:'Resume logging'}).waitFor();
  await page.getByRole('button',{name:'Resume logging'}).click();
- await page.getByRole('button',{name:'Use this YouTube Music tab'}).click();
- await page.getByText('Open YouTube Music in the active tab, then select it here.').waitFor();
+ await page.getByRole('button',{name:'Use this YouTube / Music tab'}).click();
+ await page.getByText('Open YouTube Music or a YouTube watch page in the active tab, then select it here.').waitFor();
  const errors=await page.evaluate(()=>document.querySelectorAll('script:not([src])').length);
  assert.equal(errors,0);
  console.log('PASS: Chromium loads MV3 worker and popup; pause persists across reload; unsupported tab is rejected.');

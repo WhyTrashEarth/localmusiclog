@@ -102,3 +102,20 @@ test('diagnostic transition buffer remains bounded to three transitions',()=>{
  for(let i=0;i<8;i++){f.event('timeupdate',8,5000*i+1000);f.event('seeking',0,5000*i+1010);}
  assert.equal(f.context.__localMusicLogCycle.transitions.length,3);
 });
+test('regular YouTube records video title and channel without inventing an artist',()=>{
+ const result=detect({url:'https://www.youtube.com/watch?v=abc',data:{video_id:'abc',title:'A video title',author:'Uploader channel'}});
+ assert.equal(result.sample.kind,'youtube-video');assert.equal(result.sample.artist,'');
+ assert.equal(result.sample.channel,'Uploader channel');assert.equal(result.sample.source,'https://www.youtube.com/watch?v=abc');
+});
+test('regular YouTube waits for the correct player identity during navigation',()=>{
+ const result=detect({url:'https://www.youtube.com/watch?v=new',data:{video_id:'old',title:'Old title',author:'Old channel'}});
+ assert.equal(result.sample,null);assert.match(result.status,/navigating/);
+});
+test('regular YouTube requires channel metadata',()=>{
+ const result=detect({url:'https://www.youtube.com/watch?v=abc',data:{video_id:'abc',title:'Title'}});
+ assert.equal(result.sample,null);assert.match(result.status,/channel/);
+});
+test('regular YouTube shorts and live video are outside this test build',()=>{
+ assert.equal(detect({url:'https://www.youtube.com/shorts/abc',data:{video_id:'abc',title:'Short',author:'Channel'}}).sample,null);
+ assert.equal(detect({url:'https://www.youtube.com/watch?v=abc',data:{video_id:'abc',title:'Live',author:'Channel',isLive:true}}).sample,null);
+});

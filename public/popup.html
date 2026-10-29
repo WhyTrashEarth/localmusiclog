@@ -13,7 +13,7 @@
    <h1>Local Music Log</h1>
    <p>Your music history stays in this browser.</p>
   </header>
-  <button id="select">Use this YouTube Music tab</button>
+  <button id="select">Use this YouTube / Music tab</button>
   <p id="status" role="status" aria-live="polite">Loading…</p>
   <div class="controls">
    <button id="pause">Pause logging</button>
@@ -21,7 +21,7 @@
   </div>
   <section id="clear-confirmation" class="confirmation" aria-labelledby="clear-heading" hidden>
    <h2 id="clear-heading">Clear local history?</h2>
-   <p>This permanently deletes the saved tracks. Your logging setting stays the same.</p>
+   <p>This permanently deletes the saved plays. Your logging setting stays the same.</p>
    <div class="controls">
     <button id="cancel-clear">Keep history</button>
     <button id="confirm-clear" class="danger">Delete history</button>
@@ -29,11 +29,11 @@
    <p id="clear-error" role="alert" hidden></p>
   </section>
   <p id="action-status" role="status" aria-live="polite"></p>
-  <h2 class="history-heading">Recent tracks <span id="count"></span></h2>
-  <p id="empty">No tracks yet. Start playback in your selected tab.</p>
-  <ol id="history" aria-label="Recent tracks, newest first"></ol>
+  <h2 class="history-heading">Recent plays <span id="count"></span></h2>
+  <p id="empty">No plays yet. Start playback in your selected tab.</p>
+  <ol id="history" aria-label="Recent plays, newest first"></ol>
   <details><summary>Playback diagnostics</summary><p id="diagnostics"></p><p>Local troubleshooting only. Nothing is uploaded.</p></details>
-  <footer>No audio capture. No uploads. Newest 300 plays retained.<br>Development prototype · v0.1.7</footer>
+  <footer>No audio capture. No uploads. Newest 300 plays retained.<br>Development prototype · v0.1.8</footer>
  </main>
  <script type="module" src="popup.js"></script>
 </body>

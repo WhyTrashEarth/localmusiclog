@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Local Music Log",
-  "version": "0.1.7",
-  "description": "A private, local history for your explicitly selected YouTube Music tab.",
+  "version": "0.1.8",
+  "description": "Private local playback history for an explicitly selected YouTube Music or YouTube tab.",
   "permissions": [
     "activeTab",
     "scripting",

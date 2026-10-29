@@ -12,7 +12,7 @@ try {
  });
  await context.addInitScript(()=>{
   const entry={title:'A very long song title '.repeat(8),artist:'Artist',source:'https://music.youtube.com/watch?v=abc',id:'a',observedAt:'2026-10-29T17:00:00Z'};
-  let state={history:Array.from({length:300},(_,i)=>({...entry,id:String(i)})),paused:false,tabId:7,last:null,status:'Listening to the selected tab.'};
+  let state={history:Array.from({length:300},(_,i)=>i===299?{...entry,id:String(i),kind:'youtube-video',artist:'',channel:'Uploader',source:'https://www.youtube.com/watch?v=abc'}:{...entry,id:String(i)}),paused:false,tabId:7,last:null,status:'Listening to the selected tab.'};
   const handlers=[];
   window.uiTest={requests:[],fail:false,push:()=>handlers.forEach(fn=>fn({state:{newValue:state}},'local'))};
   window.chrome={storage:{onChanged:{addListener:fn=>handlers.push(fn)}},runtime:{sendMessage:async({type})=>{
@@ -30,6 +30,7 @@ try {
  let dialogs=0;page.on('dialog',async d=>{dialogs++;await d.dismiss();});
  await page.goto('https://popup.test/popup.html');
  await page.getByText('(300/300)',{exact:true}).waitFor();
+ await page.getByText('YouTube video · Channel: Uploader',{exact:true}).waitFor();
  const clear=page.getByRole('button',{name:'Clear history',exact:true});
  await clear.click();
  await page.getByRole('heading',{name:'Clear local history?'}).waitFor();

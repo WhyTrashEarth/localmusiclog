@@ -18,7 +18,7 @@ function render(state: State) {
  element('history').replaceChildren(...[...state.history].reverse().map(entry=>{
   const li=document.createElement('li');
   const title=document.createElement('strong');title.textContent=entry.title;
-  const artist=document.createElement('span');artist.textContent=entry.artist;
+  const artist=document.createElement('span');artist.textContent=entry.kind==='youtube-video'?`YouTube video · Channel: ${entry.channel || 'Unavailable'}`:`YouTube Music · ${entry.artist}`;
   const time=document.createElement('time');time.dateTime=entry.observedAt;time.textContent=new Date(entry.observedAt).toLocaleString();
   li.append(title,artist,time);return li;
  }));
