@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
 try {
  const page=await browser.newPage();
+ await page.route("https://fixture.test/**",route=>route.fulfill({body:"<!doctype html><html><body></body></html>",contentType:"text/html"}));
+ await page.goto("https://fixture.test/");
  await page.setContent('<ytmusic-player-bar><span class="title">Big Wheels</span><span class="byline"><a href="browse/artist">Electric Light Orchestra</a></span></ytmusic-player-bar><div id="movie_player"><video></video></div>');
  await page.evaluate(()=>{
   document.querySelector('#movie_player').getVideoData=()=>({video_id:'example123',title:'Big Wheels',author:'Electric Light Orchestra'});

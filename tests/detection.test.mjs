@@ -4,9 +4,9 @@ import vm from 'node:vm';
 import {detectPlayer} from '../dist/detection.js';
 function detect({data,artist=null,title=null,url='https://music.youtube.com/playlist?list=album',metadata=null,ad=false}={}) {
  const bar={querySelector:s=>s==='.title'?title&&{textContent:title}:s.includes('channel/')?artist&&{textContent:artist}:null};
- const media={paused:false,ended:false,readyState:4,currentTime:20,duration:300};
+ const media={addEventListener:()=>{},removeEventListener:()=>{},paused:false,ended:false,readyState:4,currentTime:20,duration:300};
  const player={getVideoData:()=>data};
- return vm.runInNewContext(`(${detectPlayer.toString()})()`,{URL,location:{href:url},navigator:{mediaSession:{metadata}},document:{querySelector:s=>s==='ytmusic-player-bar'?bar:s==='#movie_player'?player:s==='#movie_player.ad-showing'?ad?{}:null:media}});
+ return vm.runInNewContext(`(${detectPlayer.toString()})()`,{URL,crypto,performance,location:{href:url},navigator:{mediaSession:{metadata}},document:{addEventListener:()=>{},removeEventListener:()=>{},querySelector:s=>s==='ytmusic-player-bar'?bar:s==='#movie_player'?player:s==='#movie_player.ad-showing'?ad?{}:null:media}});
 }
 test('player data identifies track while viewing an album page',()=>{
  const result=detect({data:{video_id:'abc_123',title:'Big Wheels',author:'Electric Light Orchestra'}});

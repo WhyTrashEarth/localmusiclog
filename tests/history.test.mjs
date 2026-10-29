@@ -33,3 +33,16 @@ test('rolling history retains newest 300 events',()=>{
  let s=initialState();for(let i=0;i<305;i++)s=record(s,sample({source:`https://music.youtube.com/watch?v=${i}`}));
  assert.equal(s.history.length,300);assert.equal(s.history[0].source,'https://music.youtube.com/watch?v=5');
 });
+test('event cycles count consecutive repeats even when polling never sees ended',()=>{
+ let s=record(initialState(),sample({playbackCycle:'session:0'}));
+ s=record(s,sample({position:0.5,playbackCycle:'session:1'}));
+ s=record(s,sample({position:1.5,playbackCycle:'session:1'}));
+ s=record(s,sample({position:0.2,playbackCycle:'session:2'}));
+ assert.equal(s.history.length,3);
+});
+test('observer restart and backward/stale cycle tokens do not invent plays',()=>{
+ let s=record(initialState(),sample({playbackCycle:'old:3'}));
+ s=record(s,sample({playbackCycle:'new:0'}));
+ s=record(s,sample({playbackCycle:'new:0',position:0}));
+ assert.equal(s.history.length,1);
+});
