@@ -77,7 +77,7 @@ test('old tracker is replaced on the same media element without duplicating a pl
  f.context.__localMusicLogCycle={media:f.media,token:'existing',cycle:2,source:'abc',endedSource:null,position:8,time:0,wasPlaying:true,inputAt:-Infinity,dispose:()=>{disposed=true;}};
  const result=f.probe();assert.equal(disposed,true);
  assert.equal(result.sample.playbackCycle,'existing:2');
- assert.match(result.diagnostics,/Tracker v5/);assert.doesNotMatch(result.diagnostics,/undefined/);
+ assert.match(result.diagnostics,/Tracker v6/);assert.doesNotMatch(result.diagnostics,/undefined/);
  f.event('timeupdate',9.8,1800);f.event('seeking',0,2000,true);f.event('playing',0.1,2100);
  assert.equal(f.probe().sample.playbackCycle,'existing:3');
 });
@@ -88,4 +88,17 @@ test('boundary uses full track duration instead of growing raw media duration',(
  f.media.duration=900;
  f.event('seeking',0,441000,true);f.event('playing',0.1,441100);
  assert.match(f.probe().sample.playbackCycle,/:1$/);
+});
+test('retains the rejected rewind reason after playback progresses',()=>{
+ const f=eventFixture();f.probe();f.event('timeupdate',9.5,1500);
+ f.event('seeking',0,1510);f.event('playing',0.1,1520);
+ f.event('timeupdate',3,4500);
+ const result=f.probe();assert.match(result.sample.playbackCycle,/:0$/);
+ assert.match(result.diagnostics,/Rewind 9.500 → 0.000/);
+ assert.match(result.diagnostics,/finish timing mismatch/);
+});
+test('diagnostic transition buffer remains bounded to three transitions',()=>{
+ const f=eventFixture();f.probe();
+ for(let i=0;i<8;i++){f.event('timeupdate',8,5000*i+1000);f.event('seeking',0,5000*i+1010);}
+ assert.equal(f.context.__localMusicLogCycle.transitions.length,3);
 });

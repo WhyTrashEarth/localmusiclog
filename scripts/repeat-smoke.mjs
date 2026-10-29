@@ -22,7 +22,7 @@ try {
  await page.evaluate(()=>{delete window.__localMusicLogCycle.version;delete window.__localMusicLogCycle.lastEvent;});
  const upgraded=await page.evaluate(detectPlayer);
  assert.equal(upgraded.sample.playbackCycle,firstProbe.sample.playbackCycle);
- assert.match(upgraded.diagnostics,/Tracker v5/);assert.doesNotMatch(upgraded.diagnostics,/undefined/);
+ assert.match(upgraded.diagnostics,/Tracker v6/);assert.doesNotMatch(upgraded.diagnostics,/undefined/);
  await page.evaluate(()=>{const v=document.querySelector('video');v.loop=true;return v.play();});
  let state=initialState();
  const probe=async()=>{const d=await page.evaluate(detectPlayer);assert.ok(d.sample);state=record(state,d.sample);return d.sample;};

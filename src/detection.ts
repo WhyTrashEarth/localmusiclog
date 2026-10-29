@@ -45,14 +45,14 @@ export function detectPlayer(): Detection {
  const observed=timing();
  // Install event listeners once per media element. Polling alone can miss the
  // ended → playing transition entirely, especially with repeat-one enabled.
- type CycleTracker = { version: number; sample: () => void; media: HTMLMediaElement; token: string; cycle: number; source: string; endedSource: string | null; position: number; time: number; wasPlaying: boolean; inputAt: number; lastEvent: string; restartReason: string; dispose: () => void };
+ type CycleTracker = { version: number; sample: () => void; media: HTMLMediaElement; token: string; cycle: number; source: string; endedSource: string | null; position: number; time: number; wasPlaying: boolean; inputAt: number; lastEvent: string; restartReason: string; transitions: string[]; peak: number; bindings: number; dispose: () => void };
  const scope=globalThis as typeof globalThis & { __localMusicLogCycle?: CycleTracker };
  let tracker=scope.__localMusicLogCycle;
- if(tracker?.media!==media || tracker?.version!==5) {
+ if(tracker?.media!==media || tracker?.version!==6) {
   const previous=tracker;
   previous?.dispose?.();
   const compatible=previous?.source===videoId && typeof previous?.token==='string';
-  const t: CycleTracker={version:5,sample:()=>{},media:media!,token:compatible?previous.token:crypto.randomUUID(),cycle:compatible?previous.cycle:0,source:videoId,endedSource:compatible?previous.endedSource:null,position:compatible?previous.position:observed.position,time:compatible?previous.time:performance.now(),wasPlaying:compatible?previous.wasPlaying:false,inputAt:compatible?previous.inputAt:-Infinity,lastEvent:'attached v5',restartReason:'none observed',dispose:()=>{}};
+  const t: CycleTracker={version:6,sample:()=>{},media:media!,token:compatible?previous.token:crypto.randomUUID(),cycle:compatible?previous.cycle:0,source:videoId,endedSource:compatible?previous.endedSource:null,position:compatible?previous.position:observed.position,time:compatible?previous.time:performance.now(),wasPlaying:compatible?previous.wasPlaying:false,inputAt:compatible?previous.inputAt:-Infinity,lastEvent:'attached v6',restartReason:'none observed',transitions:compatible?(previous.transitions || []):[],peak:compatible?(previous.peak || observed.position):observed.position,bindings:compatible?(previous.bindings || 1)+(previous.media!==media?1:0):1,dispose:()=>{}};
   const identity=()=>{
    try { return text(player?.getVideoData?.()?.video_id) || t.source; } catch { return t.source; }
   };
@@ -74,6 +74,21 @@ export function detectPlayer(): Detection {
     Number.isFinite(duration) && duration>0 && position<t.position && position<Math.min(2,duration/2) &&
     remaining>=0 && remaining<Math.min(1,duration/2) && elapsed>0 && elapsed<2 &&
     remaining<=elapsed*t.media.playbackRate+0.05 && now-t.inputAt>1500;
+   if(same && t.position-position>0.5) {
+    const inputAge=Number.isFinite(t.inputAt)?`${((now-t.inputAt)/1000).toFixed(2)}s`:'none';
+    const reason=restarted?'accepted: completion':wrapped?'accepted: boundary':[
+     !t.wasPlaying && 'previously paused',
+     !(duration>0) && 'unknown duration',
+     !(position<Math.min(2,duration/2)) && 'not near start',
+     !(remaining>=0 && remaining<Math.min(1,duration/2)) && 'not near duration',
+     !(elapsed>0 && elapsed<2) && 'event gap',
+     !(remaining<=elapsed*t.media.playbackRate+0.05) && 'finish timing mismatch',
+     !(now-t.inputAt>1500) && 'recent input'
+    ].filter(Boolean).join(', ') || 'unclassified';
+    t.transitions=[...t.transitions,`Rewind ${t.position.toFixed(3)} → ${position.toFixed(3)}s; duration ${duration.toFixed(3)}; gap ${elapsed.toFixed(3)}s; remaining ${remaining.toFixed(3)}s; rate ${t.media.playbackRate}; playing ${t.wasPlaying} → ${active}; event ${event.type}; input ${inputAge}; peak ${t.peak.toFixed(3)}s; ${reason}`].slice(-3);
+   }
+   if(!same)t.transitions=[...t.transitions,'Track identity changed.'].slice(-3);
+   t.peak=same?Math.max(t.peak,position):position;
    if(wrapped)t.endedSource=id;
    if(restarted || (wrapped && active)) {t.cycle++;t.endedSource=null;t.restartReason=wrapped?'end-boundary rewind':'completion then playback';}
    if(!same)t.endedSource=null;
@@ -94,5 +109,5 @@ export function detectPlayer(): Detection {
  // Reconcile a track change even if no media event fired during that transition.
  if(tracker.source!==videoId){tracker.source=videoId;tracker.endedSource=null;}
  const playing = !media!.paused && !media!.ended && media!.readyState>=2;
- return {sample:{title,artist,source:`https://music.youtube.com/watch?v=${videoId}`,playing,position:observed.position,duration:observed.duration,ended:media!.ended,playbackCycle:`${tracker.token}:${tracker.cycle}`},status:playing?'Listening to the selected tab.':'Playback paused or buffering.',diagnostics:`Tracker v${tracker.version} · Position ${observed.position.toFixed(1)} / ${observed.duration?observed.duration.toFixed(1):'?'} seconds · Clock ${observed.clockSource} · Duration ${observed.durationSource} · Raw media duration ${Number.isFinite(media!.duration)?media!.duration.toFixed(1):'?'} · Native loop ${media!.loop?'on':'off'} · Restarts ${tracker.cycle} · Last event ${tracker.lastEvent} · ${tracker.restartReason}`};
+ return {sample:{title,artist,source:`https://music.youtube.com/watch?v=${videoId}`,playing,position:observed.position,duration:observed.duration,ended:media!.ended,playbackCycle:`${tracker.token}:${tracker.cycle}`},status:playing?'Listening to the selected tab.':'Playback paused or buffering.',diagnostics:`Tracker v${tracker.version} · Position ${observed.position.toFixed(1)} / ${observed.duration?observed.duration.toFixed(1):'?'} seconds · Clock ${observed.clockSource} · Duration ${observed.durationSource} · Raw media duration ${Number.isFinite(media!.duration)?media!.duration.toFixed(1):'?'} · Native loop ${media!.loop?'on':'off'} · Restarts ${tracker.cycle} · Last event ${tracker.lastEvent} · ${tracker.restartReason} · Media bindings ${tracker.bindings} · Recent transitions: ${tracker.transitions.length?tracker.transitions.join(' | '):'none observed yet'}`};
 }
