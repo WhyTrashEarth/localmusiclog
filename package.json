@@ -1,0 +1,16 @@
+{
+  "name": "local-music-log",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc && node scripts/build.mjs",
+    "test": "npm run build && node tests/history.test.mjs && node tests/observer.test.mjs",
+    "test:browser": "node scripts/browser-smoke.mjs"
+  },
+  "devDependencies": {
+    "@types/chrome": "0.1.24",
+    "typescript": "5.9.3",
+    "playwright-core": "1.56.1"
+  }
+}
