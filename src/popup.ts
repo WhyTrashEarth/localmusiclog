@@ -9,6 +9,7 @@ async function send(type:string) {
  } catch(error) { element('status').textContent = error instanceof Error ? error.message : 'Unable to load history.'; return false; }
 }
 function render(state: State) {
+ element('diagnostics').textContent=state.diagnostics || 'No playback probe received yet.';
  element('status').textContent = state.paused?'Logging paused. History remains on this device.':state.status;
  element('pause').textContent=state.paused?'Resume logging':'Pause logging';
  element('count').textContent=`(${state.history.length}/300)`;

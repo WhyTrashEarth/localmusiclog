@@ -12,7 +12,7 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
     try {
      const [result] = await chrome.scripting.executeScript({target:{tabId:state.tabId!},world:'MAIN',func:detectPlayer});
      const detection=result?.result;
-     if(detection?.sample && validSample(detection.sample)) await save(record(state,detection.sample));
+     if(detection?.sample && validSample(detection.sample)) await save({...record(state,detection.sample),diagnostics:detection.diagnostics});
      else await save({...state,status:detection?.status || 'Player returned no usable metadata. Select the tab again.'});
     } catch { await save({...state,status:'Cannot read the selected player. Refresh YouTube Music, then select this tab again.'}); }
    }
@@ -26,7 +26,7 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
     if(!tab?.id || !tab.url || new URL(tab.url).origin!=='https://music.youtube.com') throw new Error('Open YouTube Music in the active tab, then select it here.');
     // Probe messages are queued after this operation, so selection is saved first.
     await chrome.scripting.executeScript({target:{tabId:tab.id},files:['observer.js']});
-    const next={...state,tabId:tab.id,last:state.tabId===tab.id?state.last:null,status:'Waiting for track information.'};
+    const next={...state,tabId:tab.id,last:state.tabId===tab.id?state.last:null,status:'Waiting for track information.',diagnostics:undefined};
     await save(next); return next;
    }
    case 'pause': {const next={...state,paused:!state.paused,status:state.paused?'Waiting for playback.':'Logging paused.'};await save(next);return next;}

@@ -37,5 +37,23 @@ try {
  await page.evaluate(()=>{const v=document.querySelector('video');v.currentTime=0;return v.play();});
  await page.waitForTimeout(100);await probe();
  assert.equal(state.history.length,count+1,'Replay after completion must count even if ended was never polled');
- console.log('PASS: real Chromium media loops produce 3 entries; seek/pause do not duplicate; replay after ended counts without an ended poll. Local fixture, not live YouTube Music.');
+ // Model a site that rewinds before ended without enabling HTML native loop.
+ await page.evaluate(()=>{
+  const v=document.querySelector('video');v.pause();v.currentTime=0;
+  window.siteLoops=0;
+  window.siteTimer=setInterval(()=>{
+   if(!v.paused && v.currentTime>=v.duration-0.025){window.siteLoops++;v.currentTime=0;void v.play();}
+  },10);
+ });
+ await page.waitForTimeout(100);
+ await page.evaluate(()=>document.querySelector('video').play());
+ await page.waitForTimeout(100);await probe();
+ const beforeSite=state.history.length;
+ const siteDeadline=Date.now()+10000;
+ while(state.history.length<beforeSite+2 && Date.now()<siteDeadline){await page.waitForTimeout(500);await probe();}
+ assert.ok(await page.evaluate(()=>window.siteLoops>=2),'Site-style loop fixture actually executed');
+ assert.equal(state.history.length,beforeSite+2,'Site-style rewind without native loop/ended must count');
+ await page.evaluate(()=>clearInterval(window.siteTimer));
+ console.log('PASS: real Chromium native loops, site-style near-completion rewinds without native loop, seek/pause deduplication, and replay after completion. Local fixture, not live YouTube Music.');
+
 } finally {await browser.close();}

@@ -1,7 +1,7 @@
 export interface Track { title: string; artist: string; source: string }
 export interface Sample extends Track { playing: boolean; position: number; duration: number; ended: boolean; playbackCycle?: string }
 export interface Entry extends Track { observedAt: string; id: string }
-export interface State { history: Entry[]; paused: boolean; tabId: number | null; last: Sample | null; status: string }
+export interface State { history: Entry[]; paused: boolean; tabId: number | null; last: Sample | null; status: string; diagnostics?: string }
 export const initialState = (): State => ({history:[], paused:false, tabId:null,last:null,status:'Choose a YouTube Music tab to begin.'});
 export function validSample(value: unknown): value is Sample {
  if (!value || typeof value !== 'object') return false;

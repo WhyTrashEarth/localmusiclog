@@ -31,3 +31,28 @@ test('missing artist remains unrecorded',()=>{
 test('advertisements are not recorded',()=>{
  assert.equal(detect({data:{video_id:'abc',title:'Ad',author:'Ad'},ad:true}).sample,null);
 });
+function eventFixture() {
+ let clock=0;const mediaEvents=new Map(),docEvents=new Map();
+ const media={paused:false,ended:false,readyState:4,currentTime:8,duration:10,playbackRate:1,loop:false,addEventListener:(n,fn)=>mediaEvents.set(n,fn),removeEventListener:()=>{}};
+ const player={getVideoData:()=>({video_id:'abc',title:'Song',author:'Artist'})};
+ const context=vm.createContext({URL,crypto,performance:{now:()=>clock},location:{href:'https://music.youtube.com/'},navigator:{},document:{addEventListener:(n,fn)=>docEvents.set(n,fn),removeEventListener:()=>{},querySelector:s=>s==='ytmusic-player-bar'?{querySelector:()=>null}:s==='#movie_player'?player:s==='#movie_player.ad-showing'?null:media}});
+ const probe=()=>vm.runInContext(`(${detectPlayer.toString()})()`,context);
+ const event=(name,position,time,paused=false)=>{media.currentTime=position;media.paused=paused;clock=time;mediaEvents.get(name)?.({type:name,target:media});};
+ return {probe,event,media,input:time=>{clock=time;docEvents.get('pointerdown')();}};
+}
+test('site-style rewind counts after transient pause even without native loop',()=>{
+ const f=eventFixture();f.probe();f.event('timeupdate',9.8,1800);
+ f.event('seeking',0,2000,true);f.event('playing',0.1,2100);
+ assert.match(f.probe().sample.playbackCycle,/:1$/);
+ f.event('timeupdate',0.5,2500);assert.match(f.probe().sample.playbackCycle,/:1$/);
+});
+test('manual seek near the end is suppressed when user input was observed',()=>{
+ const f=eventFixture();f.probe();f.event('timeupdate',9.8,1800);
+ f.input(1990);f.event('seeking',0,2000);f.event('playing',0.1,2100);
+ assert.match(f.probe().sample.playbackCycle,/:0$/);
+});
+test('programmatic seek before predicted completion does not count',()=>{
+ const f=eventFixture();f.probe();f.event('timeupdate',9.5,1500);
+ f.event('seeking',0,1510);f.event('playing',0.1,1520);
+ assert.match(f.probe().sample.playbackCycle,/:0$/);
+});
