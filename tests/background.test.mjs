@@ -26,5 +26,16 @@ test('selection → probe → storage → pause → diagnostics',async()=>{
  await send({type:'pause'});result={sample:null,status:'Waiting for artist. No track recorded.'};
  await send({type:'probe'},tab);assert.match(state.status,/artist/);assert.equal(state.history.length,1);
  fail=true;await send({type:'probe'},tab);assert.match(state.status,/Cannot read/);
+ fail=false;
+ const base={title:'Big Wheels',artist:'Electric Light Orchestra',source:'https://music.youtube.com/watch?v=abc',position:0,duration:300,ended:false};
+ result={sample:{...base,playing:true,playbackCycle:'session:0'}};
+ await send({type:'probe'},tab);
+ assert.equal(state.history.length,1);
+ result={sample:{...base,playing:false,playbackCycle:'session:1'}};
+ await send({type:'probe'},tab);assert.equal(state.history.length,1);
+ result={sample:{...base,playing:true,playbackCycle:'session:1'}};
+ await send({type:'probe'},tab);assert.equal(state.history.length,2);
+ await send({type:'probe'},tab);assert.equal(state.history.length,2);
  await send({type:'clear'});assert.equal(state.history.length,0);
+ await send({type:'probe'},tab);assert.equal(state.history.length,0);
 });

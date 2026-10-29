@@ -26,7 +26,7 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
     if(!tab?.id || !tab.url || new URL(tab.url).origin!=='https://music.youtube.com') throw new Error('Open YouTube Music in the active tab, then select it here.');
     // Probe messages are queued after this operation, so selection is saved first.
     await chrome.scripting.executeScript({target:{tabId:tab.id},files:['observer.js']});
-    const next={...state,tabId:tab.id,last:state.tabId===tab.id?state.last:null,status:'Waiting for track information.',diagnostics:undefined};
+    const next={...state,tabId:tab.id,last:state.tabId===tab.id?state.last:null,lastRecorded:state.tabId===tab.id?state.lastRecorded:null,status:'Waiting for track information.',diagnostics:undefined};
     await save(next); return next;
    }
    case 'pause': {const next={...state,paused:!state.paused,status:state.paused?'Waiting for playback.':'Logging paused.'};await save(next);return next;}
@@ -38,4 +38,4 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
  result.then(respond,error=>respond({error:error.message}));
  return true;
 });
-chrome.tabs.onRemoved.addListener(id=>{queue=queue.then(async()=>{const s=await getState();if(s.tabId===id)await save({...s,tabId:null,last:null,status:'Selected tab closed. Select a tab to continue.'});}).catch(()=>{});});
+chrome.tabs.onRemoved.addListener(id=>{queue=queue.then(async()=>{const s=await getState();if(s.tabId===id)await save({...s,tabId:null,last:null,lastRecorded:null,status:'Selected tab closed. Select a tab to continue.'});}).catch(()=>{});});

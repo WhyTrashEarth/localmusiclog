@@ -46,3 +46,27 @@ test('observer restart and backward/stale cycle tokens do not invent plays',()=>
  s=record(s,sample({playbackCycle:'new:0',position:0}));
  assert.equal(s.history.length,1);
 });
+test('a repeat detected while buffering is recorded when playback becomes ready',()=>{
+ let s=record(initialState(),sample({playbackCycle:'session:0'}));
+ s=record(s,sample({position:0,playing:false,playbackCycle:'session:1'}));
+ assert.equal(s.history.length,1);
+ s=record(s,sample({position:0.2,playing:true,playbackCycle:'session:1'}));
+ assert.equal(s.history.length,2);
+ s=record(s,sample({position:1,playing:true,playbackCycle:'session:1'}));
+ assert.equal(s.history.length,2);
+});
+test('repeat remains eligible after a new observer session and buffering probes',()=>{
+ let s=record(initialState(),sample({playbackCycle:'old:3'}));
+ s=record(s,sample({playbackCycle:'new:0'}));
+ s=record(s,sample({playbackCycle:'new:1',playing:false}));
+ s=record(s,sample({playbackCycle:'new:1',playing:false}));
+ s=record(s,sample({playbackCycle:'new:1',playing:true}));
+ assert.equal(s.history.length,2);
+});
+test('legacy stored state migrates without duplicating its current playback',()=>{
+ let s=record(initialState(),sample({playbackCycle:'session:0'}));
+ delete s.lastRecorded;
+ s=record(s,sample({playbackCycle:'session:0'}));assert.equal(s.history.length,1);
+ s=record(s,sample({playbackCycle:'session:1',playing:false}));
+ s=record(s,sample({playbackCycle:'session:1',playing:true}));assert.equal(s.history.length,2);
+});
