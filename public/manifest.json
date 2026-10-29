@@ -1,1 +1,19 @@
-{"manifest_version":3,"name":"Local Music Log","version":"0.1.0","description":"A private, local history for your explicitly selected YouTube Music tab.","permissions":["activeTab","scripting","storage"],"background":{"service_worker":"background.js","type":"module"},"action":{"default_popup":"popup.html","default_title":"Local Music Log"}}
+{
+  "manifest_version": 3,
+  "name": "Local Music Log",
+  "version": "0.1.1",
+  "description": "A private, local history for your explicitly selected YouTube Music tab.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Local Music Log"
+  }
+}

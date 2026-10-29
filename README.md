@@ -14,11 +14,11 @@ npm test
 npm run test:browser
 ```
 
-`npm test` builds the extension and runs seven history checks plus one observer fixture check. The browser smoke test uses `/usr/bin/chromium`, loads the unpacked extension, and checks the popup, persistence and rejection of an unsupported tab. It requires an environment where Chromium subprocesses can start.
+`npm test` builds the extension and runs history, observer, metadata detection and background integration checks. The browser smoke test uses `/usr/bin/chromium`, loads the unpacked extension, and checks the popup, persistence and rejection of an unsupported tab. It requires an environment where Chromium subprocesses can start.
 
 ## Download for Brave or Chrome
 
-Download the ready-to-load prototype from [downloads/local-music-log-0.1.0.zip](downloads/local-music-log-0.1.0.zip) using GitHub’s **Download raw file** button. Extract the ZIP. In Brave, open `brave://extensions` (Chrome: `chrome://extensions`), enable Developer mode, choose **Load unpacked**, and select the extracted folder containing `manifest.json`. No Node.js installation is needed for this ZIP. This is a development prototype, not a browser-store release. Live YouTube Music detection remains unverified.
+Download the ready-to-load prototype from [downloads/local-music-log-0.1.1.zip](downloads/local-music-log-0.1.1.zip) using GitHub’s **Download raw file** button. Extract the ZIP. In Brave, open `brave://extensions` (Chrome: `chrome://extensions`), enable Developer mode, choose **Load unpacked**, and select the extracted folder containing `manifest.json`. No Node.js installation is needed for this ZIP. This is a development prototype, not a browser-store release. Live YouTube Music detection remains unverified.
 
 ## Install from source
 
@@ -30,6 +30,10 @@ Download the ready-to-load prototype from [downloads/local-music-log-0.1.0.zip](
 
 After refreshing/navigating the page, restarting the browser, or reloading the extension, select the tab again. There is no persistent website host permission and no automatic injection into other tabs.
 
+## Updating the unpacked extension
+
+Download and extract the newest ZIP into a new folder. Remove the old Local Music Log installation from `brave://extensions`, then load the new folder using **Load unpacked**. Removing the extension clears its existing local history. Confirm version **0.1.1** on the extension details page. Refresh YouTube Music, start a song, open the popup and select that tab again. You do not need to disable Brave Shields. If it still cannot log, report the exact popup status; it now names missing player fields or access failures.
+
 ## Controls and permissions
 
 - `activeTab`: temporary access to the tab you select through the extension action.
@@ -40,7 +44,7 @@ Pause logging does not pause music. Clear history deletes stored events while re
 
 ## Metadata feasibility gate
 
-The observer reads title and artist from `ytmusic-player-bar`, a YouTube Music watch URL, and the page's video playback state. It never interprets a browser tab title, album page title or arbitrary uploader text as an artist. Missing metadata produces a waiting status and no history entry. The DOM is undocumented and can change.
+The observer requests a local probe from the extension worker. The worker executes a read-only function in the selected page's main JavaScript world to inspect `#movie_player.getVideoData()` when available, the `ytmusic-player-bar` DOM (including `/browse/` artist links), Media Session metadata, and video playback state. A player-provided track ID works even while browsing album or playlist pages. These are page-provided, undocumented interfaces; none is a supported YouTube API. If an ID is unavailable, a valid player watch link or current watch URL is required. It never interprets a browser tab title, album page title or arbitrary uploader text as an artist. Missing metadata produces a waiting status and no history entry. The DOM is undocumented and can change.
 
 Before calling Phase 1 complete, test with an actual playable YouTube Music session:
 
@@ -56,6 +60,10 @@ Fixture tests validate the implementation against simulated DOM data, not YouTub
 ## Privacy
 
 No microphone, audio recording, recognition service, analytics, ads, cloud backup or export. The extension makes no application network requests. Metadata and playback observations pass from the selected page to the extension; history remains in browser-local extension storage. Storage is not encrypted by this app. Other people with access to your browser profile may access it. Clear history removes events; uninstalling removes extension storage. Browser loading of YouTube Music itself remains subject to that site's behavior.
+
+## Version 0.1.1
+
+Addresses restrictive artist-link detection and track identity while browsing album/playlist pages. Reselecting replaces the observer timer. Missing metadata is reported field by field; ads detected by the player are skipped. `npm run test:player` exercises the serialized detector in real Chromium against a local player fixture. Actual Brave/YouTube Music behavior still requires verification.
 
 ## Next phases
 

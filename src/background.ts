@@ -1,3 +1,4 @@
+import { detectPlayer } from './detection.js';
 import { initialState, record, validSample, type State } from './history.js';
 let queue: Promise<unknown> = Promise.resolve();
 async function getState(): Promise<State> { return (await chrome.storage.local.get('state')).state ?? initialState(); }
@@ -7,8 +8,14 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
   const state = await getState();
   if(sender.tab) {
    if(sender.tab.id!==state.tabId || !sender.url?.startsWith('https://music.youtube.com/')) return {stop:true};
-   if(message.type==='sample' && validSample(message.sample)) await save(record(state,message.sample));
-   else if(message.type==='waiting' && !state.paused) await save({...state,status:'Waiting for track information. Nothing is recorded until title, artist, source and playback are available.'});
+   if(message.type==='probe' && !state.paused) {
+    try {
+     const [result] = await chrome.scripting.executeScript({target:{tabId:state.tabId!},world:'MAIN',func:detectPlayer});
+     const detection=result?.result;
+     if(detection?.sample && validSample(detection.sample)) await save(record(state,detection.sample));
+     else await save({...state,status:detection?.status || 'Player returned no usable metadata. Select the tab again.'});
+    } catch { await save({...state,status:'Cannot read the selected player. Refresh YouTube Music, then select this tab again.'}); }
+   }
    return {ok:true};
   }
   if(sender.url!==chrome.runtime.getURL('popup.html')) throw new Error('Unsupported sender');
@@ -17,7 +24,7 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
    case 'select': {
     const [tab] = await chrome.tabs.query({active:true,currentWindow:true});
     if(!tab?.id || !tab.url || new URL(tab.url).origin!=='https://music.youtube.com') throw new Error('Open YouTube Music in the active tab, then select it here.');
-    // Inject before saving selection; the observer retries on its next tick.
+    // Probe messages are queued after this operation, so selection is saved first.
     await chrome.scripting.executeScript({target:{tabId:tab.id},files:['observer.js']});
     const next={...state,tabId:tab.id,last:state.tabId===tab.id?state.last:null,status:'Waiting for track information.'};
     await save(next); return next;
