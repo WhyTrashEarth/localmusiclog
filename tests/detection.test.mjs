@@ -38,7 +38,7 @@ function eventFixture() {
  const context=vm.createContext({URL,crypto,performance:{now:()=>clock},location:{href:'https://music.youtube.com/'},navigator:{},document:{addEventListener:(n,fn)=>docEvents.set(n,fn),removeEventListener:()=>{},querySelector:s=>s==='ytmusic-player-bar'?{querySelector:()=>null}:s==='#movie_player'?player:s==='#movie_player.ad-showing'?null:media}});
  const probe=()=>vm.runInContext(`(${detectPlayer.toString()})()`,context);
  const event=(name,position,time,paused=false)=>{media.currentTime=position;media.paused=paused;clock=time;mediaEvents.get(name)?.({type:name,target:media});};
- return {probe,event,media,input:time=>{clock=time;docEvents.get('pointerdown')();}};
+ return {probe,event,media,player,context,input:time=>{clock=time;docEvents.get('pointerdown')();}};
 }
 test('site-style rewind counts after transient pause even without native loop',()=>{
  const f=eventFixture();f.probe();f.event('timeupdate',9.8,1800);
@@ -55,4 +55,37 @@ test('programmatic seek before predicted completion does not count',()=>{
  const f=eventFixture();f.probe();f.event('timeupdate',9.5,1500);
  f.event('seeking',0,1510);f.event('playing',0.1,1520);
  assert.match(f.probe().sample.playbackCycle,/:0$/);
+});
+test('full-track duration stays stable while media stream duration grows',()=>{
+ const f=eventFixture();
+ f.player.getPlayerResponse=()=>({videoDetails:{videoId:'abc',lengthSeconds:'449'}});
+ f.player.getCurrentTime=()=>215;
+ f.media.duration=26;
+ const first=f.probe();assert.equal(first.sample.duration,449);assert.equal(first.sample.position,215);
+ assert.match(first.diagnostics,/Duration track metadata/);
+ f.media.duration=449;
+ assert.equal(f.probe().sample.duration,449);
+});
+test('ignores stale track duration and safely falls back to player duration',()=>{
+ const f=eventFixture();
+ f.player.getPlayerResponse=()=>({videoDetails:{videoId:'other',lengthSeconds:'449'}});
+ f.player.getDuration=()=>100;
+ assert.equal(f.probe().sample.duration,100);
+});
+test('old tracker is replaced on the same media element without duplicating a play',()=>{
+ const f=eventFixture();let disposed=false;
+ f.context.__localMusicLogCycle={media:f.media,token:'existing',cycle:2,source:'abc',endedSource:null,position:8,time:0,wasPlaying:true,inputAt:-Infinity,dispose:()=>{disposed=true;}};
+ const result=f.probe();assert.equal(disposed,true);
+ assert.equal(result.sample.playbackCycle,'existing:2');
+ assert.match(result.diagnostics,/Tracker v5/);assert.doesNotMatch(result.diagnostics,/undefined/);
+ f.event('timeupdate',9.8,1800);f.event('seeking',0,2000,true);f.event('playing',0.1,2100);
+ assert.equal(f.probe().sample.playbackCycle,'existing:3');
+});
+test('boundary uses full track duration instead of growing raw media duration',()=>{
+ const f=eventFixture();f.media.duration=26;
+ f.player.getPlayerResponse=()=>({videoDetails:{videoId:'abc',lengthSeconds:'449'}});
+ f.probe();f.event('timeupdate',448.8,440800);
+ f.media.duration=900;
+ f.event('seeking',0,441000,true);f.event('playing',0.1,441100);
+ assert.match(f.probe().sample.playbackCycle,/:1$/);
 });

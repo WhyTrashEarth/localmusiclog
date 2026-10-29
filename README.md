@@ -18,7 +18,7 @@ npm run test:browser
 
 ## Download for Brave or Chrome
 
-Download the ready-to-load prototype from [downloads/local-music-log-0.1.4.zip](downloads/local-music-log-0.1.4.zip) using GitHub’s **Download raw file** button. Extract the ZIP. In Brave, open `brave://extensions` (Chrome: `chrome://extensions`), enable Developer mode, choose **Load unpacked**, and select the extracted folder containing `manifest.json`. No Node.js installation is needed for this ZIP. This is a development prototype, not a browser-store release. Live YouTube Music detection remains unverified.
+Download the ready-to-load prototype from [downloads/local-music-log-0.1.5.zip](downloads/local-music-log-0.1.5.zip) using GitHub’s **Download raw file** button. Extract the ZIP. In Brave, open `brave://extensions` (Chrome: `chrome://extensions`), enable Developer mode, choose **Load unpacked**, and select the extracted folder containing `manifest.json`. No Node.js installation is needed for this ZIP. This is a development prototype, not a browser-store release. Live YouTube Music detection remains unverified.
 
 ## Install from source
 
@@ -32,7 +32,7 @@ After refreshing/navigating the page, restarting the browser, or reloading the e
 
 ## Updating the unpacked extension
 
-Download and extract the newest ZIP. To preserve history, **replace the files in the folder your existing unpacked extension uses**, then click that extension's **Reload** button in `brave://extensions`. Confirm version **0.1.4** on its details page. Refresh YouTube Music, start a song, open the popup and select that tab again. If logging was paused, resume it. Removing/reinstalling the extension instead will erase its local history. You do not need to disable Brave Shields. If detection fails, report the exact popup status.
+Download and extract the newest ZIP. To preserve history, **replace the files in the folder your existing unpacked extension uses**, then click that extension's **Reload** button in `brave://extensions`. Confirm version **0.1.5** on its details page. Refresh YouTube Music, start a song, open the popup and select that tab again. If logging was paused, resume it. Removing/reinstalling the extension instead will erase its local history. You do not need to disable Brave Shields. If detection fails, report the exact popup status.
 
 ## Controls and permissions
 
@@ -60,6 +60,10 @@ Fixture tests validate the implementation against simulated DOM data, not YouTub
 ## Privacy
 
 No microphone, audio recording, recognition service, analytics, ads, cloud backup or export. The extension makes no application network requests. Metadata and playback observations pass from the selected page to the extension; history remains in browser-local extension storage. Storage is not encrypted by this app. Other people with access to your browser profile may access it. Clear history removes events; uninstalling removes extension storage. Browser loading of YouTube Music itself remains subject to that site's behavior.
+
+## Version 0.1.5
+
+Responds to live diagnostics showing an older tracker with undefined fields and a changing raw media duration (26 → 449 seconds). Tracker schema v5 disposes/replaces old listeners on the same element while preserving valid cycle identity. Timing prefers `getCurrentTime()` and identity-matched `getPlayerResponse().videoDetails.lengthSeconds`, followed by `getDuration()`, then the raw media fallback. These are undocumented page APIs. Diagnostics name the clock/duration source and show raw media duration separately. The browser fixture tests old tracker migration and growing raw duration during actual looping. Live YouTube Music repeat-one still needs verification.
 
 ## Version 0.1.4
 

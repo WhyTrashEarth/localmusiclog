@@ -12,12 +12,17 @@ try {
  await page.goto("https://fixture.test/");
  await page.setContent('<ytmusic-player-bar></ytmusic-player-bar><div id="movie_player"><video muted></video></div><button id="seek">Seek to start</button>');
  await page.evaluate(src=>{
+  document.querySelector('#movie_player').getPlayerResponse=()=>({videoDetails:{videoId:'repeatTest',lengthSeconds:'2'}});
   document.querySelector('#movie_player').getVideoData=()=>({video_id:'repeatTest',title:'Fixture track',author:'Fixture artist'});
   const v=document.querySelector('video');v.src=src;
   document.querySelector('#seek').onclick=()=>{v.currentTime=0;};
  },`data:audio/wav;base64,${wav.toString('base64')}`);
  await page.waitForFunction(()=>document.querySelector('video').readyState>=2);
- await page.evaluate(detectPlayer);
+ const firstProbe=await page.evaluate(detectPlayer);
+ await page.evaluate(()=>{delete window.__localMusicLogCycle.version;delete window.__localMusicLogCycle.lastEvent;});
+ const upgraded=await page.evaluate(detectPlayer);
+ assert.equal(upgraded.sample.playbackCycle,firstProbe.sample.playbackCycle);
+ assert.match(upgraded.diagnostics,/Tracker v5/);assert.doesNotMatch(upgraded.diagnostics,/undefined/);
  await page.evaluate(()=>{const v=document.querySelector('video');v.loop=true;return v.play();});
  let state=initialState();
  const probe=async()=>{const d=await page.evaluate(detectPlayer);assert.ok(d.sample);state=record(state,d.sample);return d.sample;};
@@ -40,20 +45,24 @@ try {
  // Model a site that rewinds before ended without enabling HTML native loop.
  await page.evaluate(()=>{
   const v=document.querySelector('video');v.pause();v.currentTime=0;
+  Object.defineProperty(v,'duration',{configurable:true,get:()=>window.rawDuration??26});
   window.siteLoops=0;
   window.siteTimer=setInterval(()=>{
-   if(!v.paused && v.currentTime>=v.duration-0.025){window.siteLoops++;v.currentTime=0;void v.play();}
+   if(!v.paused && v.currentTime>=2-0.025){window.siteLoops++;v.currentTime=0;void v.play();}
   },10);
  });
  await page.waitForTimeout(100);
  await page.evaluate(()=>document.querySelector('video').play());
  await page.waitForTimeout(100);await probe();
  const beforeSite=state.history.length;
+ assert.equal((await probe()).duration,2);
+ await page.evaluate(()=>window.rawDuration=449);
+ assert.equal((await probe()).duration,2);
  const siteDeadline=Date.now()+10000;
  while(state.history.length<beforeSite+2 && Date.now()<siteDeadline){await page.waitForTimeout(500);await probe();}
  assert.ok(await page.evaluate(()=>window.siteLoops>=2),'Site-style loop fixture actually executed');
  assert.equal(state.history.length,beforeSite+2,'Site-style rewind without native loop/ended must count');
  await page.evaluate(()=>clearInterval(window.siteTimer));
- console.log('PASS: real Chromium native loops, site-style near-completion rewinds without native loop, seek/pause deduplication, and replay after completion. Local fixture, not live YouTube Music.');
+ console.log('PASS: real Chromium tracker upgrade, stable full-track duration despite growing stream duration, native loops, site-style near-completion rewinds without native loop, seek/pause deduplication, and replay after completion. Local fixture, not live YouTube Music.');
 
 } finally {await browser.close();}
