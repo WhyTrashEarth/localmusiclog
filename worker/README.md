@@ -1,0 +1,44 @@
+# Phase 2 backend
+
+Nothing here deploys automatically. Local development and automated tests need no Cloudflare account, Twitch registration, or real secrets.
+
+From `/workspace/localmusiclog` (or your checkout root), use Node 24:
+
+```sh
+npm ci --ignore-scripts
+npm test
+npm run build:worker
+npm run dev:worker
+```
+
+The last command runs Wrangler locally with persistent ignored `.wrangler` state. `GET /health` returns `{"ok":true}`. OAuth correctly returns 503 until configured. `npm run test:worker` uses real workerd/SQLite Durable Objects with mocked Twitch endpoints; it does not contact Twitch. The retention/alarm test uses an injected clock-independent storage fixture. The extension build is `dist/`; load it unpacked as described in the root README. No sharing occurs in a fresh extension, and ordinary logging requires no server. Do not deploy to exercise tests.
+
+## Protocol and privacy
+
+- `GET /oauth/start?challenge=<SHA256-base64url>`: extension-generated PKCE verifier, 10-minute random OAuth state, and Secure/HttpOnly/SameSite=Lax browser-binding cookie. Fixed allowlisted extension redirect prevents arbitrary redirect destinations. Twitch authorization requests no additional scopes; the authenticated Twitch user is the broadcaster/channel owner.
+- `GET /oauth/callback`: consumes state, exchanges code server-side, validates Twitch client/user identity, and attempts to revoke the upstream access token. Neither access nor refresh tokens are stored or returned to the extension. If Twitch revocation fails, the token is still discarded; upstream revocation is not guaranteed. A 60-second single-use handoff code goes to the extension redirect fragment.
+- `POST /api/exchange {code, verifier}`: checks PKCE, consumes the handoff code, returns a random 256-bit channel capability. Its SHA-256 hash is stored; the runtime capability lives only in `chrome.storage.session`, never in source or packaged assets. It is needed to authenticate publishing, and is not the Twitch app secret. Browser restart clears it. Reconnecting resets the channel to sharing off and deletes the previous public list and credential.
+- Authenticated calls require `Authorization: Bearer <capability>` and `X-Channel-ID` matching the server-derived Twitch user ID. IDs supplied inside a play are rejected. No cookie authenticates writes. Requests bearing foreign Origin headers are rejected; extension requests use the explicitly granted backend host permission. No permissive CORS is emitted.
+- `POST /api/approve {approval:"share-new-metadata-v1"}` is separate from login. The extension displays the exact metadata, public visibility, retention and accuracy limitations and requires a fresh checkbox action. Only plays recorded after approval are sent, one at a time; there is no history backfill, offline queue or retry backlog. Pause local logging also prevents new uploads. A play recorded during a failed request remains local and is not retried automatically.
+- `POST /api/plays`: validated title, artist for YouTube Music, uploader for regular YouTube, canonical watch URL, event UUID and observed time only. Input observed time must be within five minutes; server time determines public retention. URL query data other than video ID is discarded. Unknown fields, audio, positions, diagnostics and client channel assignments are rejected. Duplicate event IDs do not add a second entry within retained history.
+- `GET /recent/<twitch-login>` is a server-rendered read-only page; `GET /api/recent/<twitch-login>` supplies JSON. No viewer login, scripts, analytics or cookies. HTML escapes metadata, source links are canonical HTTPS YouTube links, and responses prohibit caching, framing and external resource loads. Already viewed/copied data cannot be recalled; a page opened before revocation must refresh to reflect deletion.
+- `POST /api/revoke` immediately deletes channel session and public history. All subsequent writes fail, including with the former token. Authenticated revocation remains usable after rate budgets are exhausted. The extension disables local uploads before making the call; if offline, it retains the credential so deletion can be retried and reports that public plays remain until expiry. A 401 clears an already invalid local credential. Revoking authorization in Twitch settings alone does not revoke this separate app session: use the extension's stop/delete button. No ongoing Twitch token is retained for polling.
+
+Newest **50 plays / 24 hours** per channel. Read-time expiry applies even if an alarm is late; minute alarms physically prune metadata and expired OAuth/rate/session records. Channel credentials/approval and username mapping expire after **7 days**, OAuth attempts after **10 minutes**, exchange codes after **60 seconds**, and hashed-IP rate records within **2 minutes**. Live processes and browser session storage do not survive restart. Local history stays at 300 entries, separate from public retention. Clearing local history does not revoke public sharing; use the explicit stop/delete action.
+
+Rate budgets: 120 requests/minute per hashed Cloudflare client IP, 10 OAuth starts/minute/IP, and 12 publish attempts/minute/channel, including invalid metadata and duplicate attempts. Revocation with a valid capability bypasses these budgets. Cloudflare supplies `CF-Connecting-IP`; local development uses a shared fallback. No IP values, OAuth codes or request bodies are logged by application code. Wrangler observability is disabled. Provider infrastructure/log retention is outside these application guarantees.
+
+The SQLite Durable Object coordinator serializes state changes, including OAuth consumption and revoke/publish ordering. This intentionally favors correctness for a small prototype. It is a single throughput/failure boundary, not a horizontally scalable high-volume service. Upstream Twitch requests have five-second timeouts; unavailable Twitch fails closed. `/health` tests routing, not OAuth readiness. Public metadata is page-provided and remains unverified; opt-in does not repair source detection accuracy.
+
+## Account configuration, only when ready for a live test
+
+The backend is prepared before this step. No real account setup was performed by Codex.
+
+1. Choose the deployed Worker HTTPS origin and the unpacked extension ID shown by Chrome/Brave. The extension identity redirect is `https://<extension-id>.chromiumapp.org/`. Extension IDs may differ across machines; configure the exact ID being tested. Only one ID is allowed per backend.
+2. Register a confidential Twitch app with callback **`https://<worker-origin>/oauth/callback`**. Keep the client secret server-side. No viewer app/login or extra Twitch API scopes are needed.
+3. Set nonsecret Worker variables `PUBLIC_ORIGIN` (HTTPS origin, no trailing slash), `EXTENSION_ID`, and `TWITCH_CLIENT_ID` in Cloudflare settings. Add `TWITCH_CLIENT_SECRET` using Cloudflare's encrypted secret settings or `wrangler secret put TWITCH_CLIENT_SECRET --config worker/wrangler.jsonc`. Never put a real secret in this repository, the extension, saved environment scripts, command-line arguments, or chat. `.dev.vars` / `.env` patterns are ignored as a safeguard, not a recommendation to store real secrets in the checkout.
+4. Review the Worker config and Durable Object migration before explicitly deploying with `wrangler deploy --config worker/wrangler.jsonc`. This is a separate manual action; the build command is dry-run only.
+5. Build/reload the extension, enter the HTTPS backend origin under Optional Twitch sharing, grant only that host, and connect Twitch. Confirm the broadcaster login and that sharing remains off. Check public history is empty. Approve metadata sharing, then play a new item. Confirm channel attribution, public title/source/time, no backfill, and viewer access without login.
+6. Press stop/delete. Refresh the public page to confirm the list is empty; replaying the old capability must return 401. Repeat with a network outage: uploads stop locally and the UI must clearly require a deletion retry. Test cancellation, browser restart, expiry, and the actual Brave/Chrome identity flow.
+
+Real Twitch consent/callback behavior and a deployed Cloudflare instance remain live integration checks. Mock tests cannot establish that account configuration, identity redirects, or live YouTube metadata are correct.

@@ -40,3 +40,9 @@ footer { padding-top: 18px; }
 details { margin-top: 16px; font-size: 12px; color: #b5c9c0; }
 summary { cursor: pointer; padding: 8px 0; }
 summary:focus-visible { outline: 3px solid #f9d97b; outline-offset: 2px; }
+#backend { display: block; width: 100%; margin: 6px 0 10px; padding: 10px; font: inherit; color: #effaf5; background: #162c24; border: 1px solid #80bca6; border-radius: 6px; }
+#sharing-panel label { display: block; margin: 10px 0; }
+#sharing-panel button { margin: 4px 0; }
+#sharing-panel a { color: #91dfbd; }
+#sharing-error { color: #ffd2cc; }
+#backend:focus-visible, #sharing-checkbox:focus-visible, #sharing-panel a:focus-visible { outline: 3px solid #f9d97b; outline-offset: 3px; }

@@ -14,3 +14,15 @@
 - Twitch/backend: not implemented; deferred until Phase 1 feasibility and reliability pass.
 
 These results do not establish Phase 1 completion. See README for the manual acceptance checklist and known repeat/transition limitations.
+
+## Phase 2 (v0.2.0)
+
+- Clean `npm ci --ignore-scripts` succeeds with the committed lockfile on Node 24.
+- `npm test`: **44 passed, 0 failed, 0 skipped**, including extension history/observer/detection/background checks, runtime publishing-client tests, and 5 backend test groups. Worker integration executes in Miniflare/workerd with SQLite Durable Objects and mocked Twitch HTTP; retention/alarm boundary checks use an injected storage fixture.
+- Backend checks cover browser-bound OAuth state, single-use state and handoff codes, PKCE, Twitch identity binding, cross-channel rejection, foreign-origin rejection, separate metadata approval, strict input validation, deduplication, safe public rendering, reauthentication, session expiry, 50-play/24-hour retention, physical alarm cleanup, request bounds, IP/channel rate limits, and revocation even after budgets are exhausted.
+- Publishing-client checks confirm zero requests in default local-only mode, no upload upon login, explicit approval, no expiry uploads, offline revocation stopping local uploads, deletion retry, and recovery from an already-invalid session.
+- `npm run build:worker`: dry-run bundle succeeds; **no deployment**.
+- Local `npm run dev:worker` startup verified using HTTP requests: `/health` returns 200/ok, `/api/recent/broadcaster` returns an empty list, and `/oauth/start` returns 503 while OAuth is unconfigured.
+- `npm run test:ui` and `npm run test:sharing-ui`: pass in Chromium with mocked browser APIs. Cover existing history controls and the new chosen-host permission, broadcaster login, separate approval checkbox, public-page link, and offline deletion warning/retry.
+- `npm run test:browser`: **blocked by environment policy**, not passed. The installed Chromium has managed `ExtensionInstallBlocklist: ["*"]`; CDP reports that unpacked extensions are disabled by the administrator. Policy was not changed.
+- No Worker deployment, Twitch registration, real credentials, live OAuth callback, or live-source metadata verification was performed. The existing v0.1.8 ZIP is unchanged; build source to test v0.2.0. See `worker/README.md` for later live checks and documented security/privacy limits.

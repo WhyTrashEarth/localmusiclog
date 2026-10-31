@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
   "name": "Local Music Log",
-  "version": "0.1.8",
-  "description": "Private local playback history for an explicitly selected YouTube Music or YouTube tab.",
+  "version": "0.2.0",
+  "description": "Local playback history with optional broadcaster-approved Twitch metadata sharing.",
   "permissions": [
     "activeTab",
     "scripting",
-    "storage"
+    "storage",
+    "identity"
   ],
   "background": {
     "service_worker": "background.js",
@@ -15,5 +16,8 @@
   "action": {
     "default_popup": "popup.html",
     "default_title": "Local Music Log"
-  }
+  },
+  "optional_host_permissions": [
+    "https://*/*"
+  ]
 }

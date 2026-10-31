@@ -1,3 +1,4 @@
+import { sharingStatus, connectSharing, approveSharing, revokeSharing, publishNew } from './sharing.js';
 import { detectPlayer } from './detection.js';
 import { initialState, record, validSample, type State } from './history.js';
 let queue: Promise<unknown> = Promise.resolve();
@@ -13,7 +14,12 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
     try {
      const [result] = await chrome.scripting.executeScript({target:{tabId:state.tabId!},world:'MAIN',func:detectPlayer});
      const detection=result?.result;
-     if(detection?.sample && validSample(detection.sample)) await save({...record(state,detection.sample),diagnostics:detection.diagnostics});
+     if(detection?.sample && validSample(detection.sample)) {
+      const next={...record(state,detection.sample),diagnostics:detection.diagnostics};
+      await save(next);
+      const entry=next.history.at(-1);
+      if(entry && entry.id!==state.history.at(-1)?.id) await publishNew(entry);
+     }
      else await save({...state,status:detection?.status || 'Player returned no usable metadata. Select the tab again.'});
     } catch { await save({...state,status:'Cannot read the selected player. Refresh the selected YouTube page, then select this tab again.'}); }
    }
@@ -21,6 +27,10 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
   }
   if(sender.url!==chrome.runtime.getURL('popup.html')) throw new Error('Unsupported sender');
   switch(message.type) {
+   case 'sharing-status': return sharingStatus();
+   case 'sharing-connect': return connectSharing(message.origin);
+   case 'sharing-approve': return approveSharing();
+   case 'sharing-revoke': return revokeSharing();
    case 'state': return state;
    case 'select': {
     const [tab] = await chrome.tabs.query({active:true,currentWindow:true});

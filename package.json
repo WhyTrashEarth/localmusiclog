@@ -1,19 +1,25 @@
 {
   "name": "local-music-log",
-  "version": "0.1.8",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "tsc && node scripts/build.mjs",
-    "test": "npm run build && node tests/history.test.mjs && node tests/observer.test.mjs && node tests/detection.test.mjs && node tests/background.test.mjs",
+    "test": "npm run build && node tests/history.test.mjs && node tests/observer.test.mjs && node tests/detection.test.mjs && node tests/background.test.mjs && node --test tests/sharing.test.mjs && npm run test:worker",
     "test:browser": "node scripts/browser-smoke.mjs",
     "test:player": "node scripts/player-smoke.mjs",
     "test:ui": "node scripts/popup-smoke.mjs",
-    "test:repeat": "node scripts/repeat-smoke.mjs"
+    "test:repeat": "node scripts/repeat-smoke.mjs",
+    "test:worker": "node --test tests/worker.test.mjs",
+    "dev:worker": "wrangler dev --config worker/wrangler.jsonc --local",
+    "build:worker": "wrangler deploy --config worker/wrangler.jsonc --dry-run --outdir ../artifacts/worker",
+    "test:sharing-ui": "node scripts/sharing-smoke.mjs"
   },
   "devDependencies": {
     "@types/chrome": "0.1.24",
+    "miniflare": "4.20260317.1",
+    "playwright-core": "1.56.1",
     "typescript": "5.9.3",
-    "playwright-core": "1.56.1"
+    "wrangler": "4.76.0"
   }
 }

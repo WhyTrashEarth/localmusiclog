@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 let listener,state,result,fail=false,calls=0,activeURL='https://music.youtube.com/playlist?list=album';
 globalThis.chrome={
- storage:{local:{get:async()=>({state}),set:async value=>{state=value.state;}}},
+ storage:{session:{get:async()=>({})},local:{get:async()=>({state}),set:async value=>{state=value.state;}}},
  runtime:{getURL:path=>`chrome-extension://test/${path}`,onMessage:{addListener:fn=>{listener=fn;}}},
  tabs:{query:async()=>[{id:7,url:activeURL}],onRemoved:{addListener:()=>{}}},
  scripting:{executeScript:async options=>{

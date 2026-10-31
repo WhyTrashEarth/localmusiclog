@@ -2,7 +2,7 @@
 
 WhyTrashEarth · Codex x TwitchCon Hackathon 2026
 
-A local-first Chromium Manifest V3 extension for an explicitly selected YouTube Music or YouTube tab. **Development prototype:** YouTube Music logging and repeat-one have been confirmed by the user in Brave. Regular YouTube watch-page support is new and awaits live-browser verification. Twitch integration is not implemented.
+A local-first Chromium Manifest V3 extension for an explicitly selected YouTube Music or YouTube tab. **Development prototype:** YouTube Music logging and repeat-one have been confirmed by the user in Brave. Regular YouTube watch-page support is new and awaits live-browser verification. Phase 2 Twitch sharing and the Cloudflare Worker backend are implemented for local testing; neither a Worker deployment nor a Twitch app is configured. See [backend setup and security model](worker/README.md).
 
 ## Develop
 
@@ -18,7 +18,7 @@ npm run test:browser
 
 ## Download for Brave or Chrome
 
-Download the ready-to-load prototype from [downloads/local-music-log-0.1.8.zip](downloads/local-music-log-0.1.8.zip) using GitHub’s **Download raw file** button. Extract the ZIP. In Brave, open `brave://extensions` (Chrome: `chrome://extensions`), enable Developer mode, choose **Load unpacked**, and select the extracted folder containing `manifest.json`. No Node.js installation is needed for this ZIP. This is a development prototype, not a browser-store release. Regular YouTube detection still needs live-browser verification.
+The existing ZIP is the local-only v0.1.8 build; build from source for Phase 2 v0.2.0. Download that earlier prototype from [downloads/local-music-log-0.1.8.zip](downloads/local-music-log-0.1.8.zip) using GitHub’s **Download raw file** button. Extract the ZIP. In Brave, open `brave://extensions` (Chrome: `chrome://extensions`), enable Developer mode, choose **Load unpacked**, and select the extracted folder containing `manifest.json`. No Node.js installation is needed for this ZIP. This is a development prototype, not a browser-store release. Regular YouTube detection still needs live-browser verification.
 
 ## Install from source
 
@@ -63,11 +63,15 @@ Before calling Phase 1 complete, test with an actual playable YouTube Music sess
 - Pause logging, resume, clear, reload, tab switch and tab closure.
 - Popup keyboard navigation, readable status updates and narrow viewport.
 
-Fixture tests validate the implementation against simulated DOM data, not YouTube Music's current live markup. Ads, podcasts, casting, unavailable songs, unusual artist links and player transitions require further testing. The prototype does not distinguish all non-song media or guarantee attribution during an asynchronous track transition. Do not use its output for automatic public publishing yet.
+Fixture tests validate the implementation against simulated DOM data, not YouTube Music's current live markup. Ads, podcasts, casting, unavailable songs, unusual artist links and player transitions require further testing. The prototype does not distinguish all non-song media or guarantee attribution during an asynchronous track transition. Metadata remains unverified. Phase 2 sharing is an explicit opt-in development prototype; review the approval disclosure before enabling it.
 
 ## Privacy
 
-No microphone, audio recording, recognition service, analytics, ads, cloud backup or export. The extension makes no application network requests. Metadata and playback observations pass from the selected page to the extension; history remains in browser-local extension storage. Storage is not encrypted by this app. Other people with access to your browser profile may access it. Clear history removes events; uninstalling removes extension storage. Browser loading of YouTube Music itself remains subject to that site's behavior.
+No microphone, audio recording, recognition service, analytics, ads, cloud backup or export. By default the extension makes no application network requests and history remains in browser-local storage. Optional Twitch sharing requests access only to the chosen HTTPS backend. Twitch login alone does not publish: a separate metadata approval enables only newly observed plays. Public metadata is retained for 24 hours / 50 plays; stop/delete revokes publishing and removes public history. See [Phase 2 privacy and revocation details](worker/README.md). Storage is not encrypted by this app. Other people with access to your browser profile may access it. Clear history removes events; uninstalling removes extension storage. Browser loading of YouTube Music itself remains subject to that site's behavior.
+
+## Version 0.2.0
+
+Adds opt-in Twitch broadcaster authentication, explicit metadata approval, channel-bound Worker publishing, public recent plays, rate limits, 24-hour retention and stop/delete revocation. Server and extension integration are tested locally; no accounts or deployment are configured. Build from source for this version.
 
 ## Version 0.1.8
 
@@ -105,7 +109,7 @@ Addresses restrictive artist-link detection and track identity while browsing al
 
 ## Next phases
 
-Only after live-site reliability passes: broadcaster Twitch OAuth, authenticated channel-bound writes, explicit sharing approval, short-retention Cloudflare storage, rate limits, immediate publishing revocation, and a public read-only recent-tracks page. Viewer login will not be required.
+Phase 2 implements broadcaster Twitch OAuth, channel-bound writes, separate sharing approval, short-retention Cloudflare storage, rate limits, stop/delete revocation, and a public read-only recent-plays page without viewer login. Local-only remains the default. See [implementation, tests, limitations and later account setup](worker/README.md). Real Twitch/Cloudflare and source-metadata checks remain outstanding.
 
 ## Submission record
 

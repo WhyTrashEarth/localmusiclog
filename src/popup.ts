@@ -68,3 +68,35 @@ element('confirm-clear').addEventListener('click',async()=>{
 });
 chrome.storage.onChanged.addListener((changes,area)=>{if(area==='local' && changes.state?.newValue)render(changes.state.newValue);});
 void send('state');
+
+async function sharingAction(type:string,origin?:string) {
+ element('sharing-error').textContent='';
+ try {
+  const s=await chrome.runtime.sendMessage({type,origin});if(s.error && !('connected' in s))throw Error(s.error);
+  element('sharing-error').textContent=s.error || '';
+  if(s.expiresAt && s.expiresAt<=Date.now())element('sharing-error').textContent='Session expired. Disconnect and reconnect.';
+  element('sharing-status').textContent=s.connected?`${s.login}: ${s.approved?'Publishing new plays':'Sharing is off'}.`:'Sharing is off. Local-only operation.';
+  element('sharing-consent').hidden=!s.connected || s.approved;
+  element('revoke-sharing').hidden=!s.connected;
+  element('public-page').hidden=!s.connected;
+  if(s.connected)element<HTMLAnchorElement>('public-link').href=`${s.origin}/recent/${encodeURIComponent(s.login)}`;
+  element<HTMLButtonElement>('connect-sharing').disabled=s.connected;
+  element<HTMLInputElement>('backend').disabled=s.connected;
+  element<HTMLInputElement>('sharing-checkbox').checked=false;
+  element<HTMLButtonElement>('approve-sharing').disabled=true;
+ }catch(error){element('sharing-error').textContent=(error instanceof Error?error.message:'Sharing failed.')+(type==='sharing-revoke'?' Uploads are stopped locally. Retry to remove public plays immediately; otherwise they expire within 24 hours.':'');}
+}
+element('sharing-checkbox').addEventListener('change',()=>{element<HTMLButtonElement>('approve-sharing').disabled=!element<HTMLInputElement>('sharing-checkbox').checked;});
+element('approve-sharing').addEventListener('click',()=>{if(element<HTMLInputElement>('sharing-checkbox').checked)void sharingAction('sharing-approve');});
+element('revoke-sharing').addEventListener('click',()=>void sharingAction('sharing-revoke'));
+element('connect-sharing').addEventListener('click',async()=>{
+ try {
+  const u=new URL(element<HTMLInputElement>('backend').value);
+  if(u.protocol!=='https:' || u.username || u.password || u.pathname!=='/' || u.search || u.hash)throw Error('Enter an HTTPS backend origin without a path.');
+  // Request only the chosen host, in the direct user gesture.
+  if(!await chrome.permissions.request({origins:[`${u.origin}/*`]}))throw Error('Backend access was not granted.');
+  await sharingAction('sharing-connect',u.origin);
+ }catch(error){element('sharing-error').textContent=error instanceof Error?error.message:'Connection failed.';}
+});
+chrome.storage.onChanged.addListener((changes,area)=>{if((area==='session' && changes.sharing) || (area==='local' && changes.sharingError))void sharingAction('sharing-status');});
+void sharingAction('sharing-status');

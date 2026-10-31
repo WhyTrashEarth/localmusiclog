@@ -11,7 +11,7 @@
   <header>
    <p class="brand">WHYTRASHEARTH · LOCAL FIRST</p>
    <h1>Local Music Log</h1>
-   <p>Your music history stays in this browser.</p>
+   <p>Local-only by default. Sharing is optional.</p>
   </header>
   <button id="select">Use this YouTube / Music tab</button>
   <p id="status" role="status" aria-live="polite">Loading…</p>
@@ -29,11 +29,25 @@
    <p id="clear-error" role="alert" hidden></p>
   </section>
   <p id="action-status" role="status" aria-live="polite"></p>
+  <details id="sharing-panel"><summary>Optional Twitch sharing</summary>
+   <p>Connect as the broadcaster to publish to your own Twitch channel’s public page. Connecting alone does not share plays.</p>
+   <label for="backend">Backend HTTPS origin</label><input id="backend" type="url" placeholder="https://your-worker.workers.dev" autocomplete="off">
+   <button id="connect-sharing">Connect Twitch</button>
+   <p id="sharing-status" role="status" aria-live="polite">Sharing is off.</p>
+   <section id="sharing-consent" hidden>
+    <p>Approval shares only new plays: title, artist or uploader, YouTube source link, and observed time. Anyone can view them without login. Newest 50 plays are kept for up to 24 hours. Metadata can be inaccurate. Existing local history, diagnostics, playback positions and audio are never uploaded.</p>
+    <label><input id="sharing-checkbox" type="checkbox"> I approve publishing this metadata publicly.</label>
+    <button id="approve-sharing" disabled>Enable metadata sharing</button>
+   </section>
+   <p id="public-page" hidden><a id="public-link" target="_blank" rel="noreferrer">Open public recent plays</a></p>
+   <button id="revoke-sharing" hidden>Stop sharing and delete public plays</button>
+   <p id="sharing-error" role="alert"></p>
+  </details>
   <h2 class="history-heading">Recent plays <span id="count"></span></h2>
   <p id="empty">No plays yet. Start playback in your selected tab.</p>
   <ol id="history" aria-label="Recent plays, newest first"></ol>
-  <details><summary>Playback diagnostics</summary><p id="diagnostics"></p><p>Local troubleshooting only. Nothing is uploaded.</p></details>
-  <footer>No audio capture. No uploads. Newest 300 plays retained.<br>Development prototype · v0.1.8</footer>
+  <details><summary>Playback diagnostics</summary><p id="diagnostics"></p><p>Local troubleshooting only. Diagnostics are never uploaded.</p></details>
+  <footer>No audio capture. Local-only unless sharing is approved. Newest 300 local plays retained.<br>Development prototype · v0.2.0</footer>
  </main>
  <script type="module" src="popup.js"></script>
 </body>
