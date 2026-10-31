@@ -1,8 +1,29 @@
 {
-  "name": "local-music-log",
+  "name": "localmusiclog",
   "main": "index.js",
   "compatibility_date": "2026-03-17",
-  "durable_objects": {"bindings": [{"name": "LOG", "class_name": "MusicLog"}]},
-  "migrations": [{"tag": "v1", "new_sqlite_classes": ["MusicLog"]}],
-  "observability": {"enabled": false}
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "LOG",
+        "class_name": "MusicLog"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "MusicLog"
+      ]
+    }
+  ],
+  "observability": {
+    "enabled": false
+  },
+  "vars": {
+    "PUBLIC_ORIGIN": "https://localmusiclog.whytrashearth.workers.dev",
+    "TWITCH_CLIENT_ID": "dzbiuxf8zn302m59b1ndiv7pewfqbx",
+    "EXTENSION_ID": "njakhkoodamgfmlalaieclnpfkcofahd"
+  }
 }

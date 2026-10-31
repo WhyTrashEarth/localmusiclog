@@ -18,7 +18,9 @@ npm run test:browser
 
 ## Download for Brave or Chrome
 
-The existing ZIP is the local-only v0.1.8 build; build from source for Phase 2 v0.2.0. Download that earlier prototype from [downloads/local-music-log-0.1.8.zip](downloads/local-music-log-0.1.8.zip) using GitHub’s **Download raw file** button. Extract the ZIP. In Brave, open `brave://extensions` (Chrome: `chrome://extensions`), enable Developer mode, choose **Load unpacked**, and select the extracted folder containing `manifest.json`. No Node.js installation is needed for this ZIP. This is a development prototype, not a browser-store release. Regular YouTube detection still needs live-browser verification.
+Download [local-music-log-0.2.0.zip](downloads/local-music-log-0.2.0.zip) using GitHub’s **Download raw file** button. Extract it. To preserve history and the extension ID, replace the files inside the folder your existing unpacked extension uses, then click **Reload** in `brave://extensions` or `chrome://extensions`. Confirm version **0.2.0**. Do not remove/reinstall the extension or select a different folder. For a new install, enable Developer mode, choose **Load unpacked**, and select the extracted folder containing `manifest.json`.
+
+This is a development prototype. Sharing remains off by default; optional Twitch sharing requires the configured backend and explicit metadata approval. No Node.js installation is needed for this ZIP.
 
 ## Install from source
 
@@ -32,7 +34,7 @@ After refreshing/navigating the page, restarting the browser, or reloading the e
 
 ## Updating the unpacked extension
 
-Download and extract the newest ZIP. To preserve history, **replace the files in the folder your existing unpacked extension uses**, then click that extension's **Reload** button in `brave://extensions`. Confirm version **0.1.8** on its details page. Refresh YouTube Music, start a song, open the popup and select that tab again. If logging was paused, resume it. Removing/reinstalling the extension instead will erase its local history. You do not need to disable Brave Shields. If detection fails, report the exact popup status.
+Download and extract the newest ZIP. To preserve history, **replace the files in the folder your existing unpacked extension uses**, then click that extension's **Reload** button in `brave://extensions`. Confirm version **0.2.0** on its details page. Refresh YouTube Music, start a song, open the popup and select that tab again. If logging was paused, resume it. Removing/reinstalling the extension instead will erase its local history. You do not need to disable Brave Shields. If detection fails, report the exact popup status.
 
 ## Controls and permissions
 
@@ -71,7 +73,7 @@ No microphone, audio recording, recognition service, analytics, ads, cloud backu
 
 ## Version 0.2.0
 
-Adds opt-in Twitch broadcaster authentication, explicit metadata approval, channel-bound Worker publishing, public recent plays, rate limits, 24-hour retention and stop/delete revocation. Server and extension integration are tested locally; no accounts or deployment are configured. Build from source for this version.
+Adds opt-in Twitch broadcaster authentication, explicit metadata approval, channel-bound Worker publishing, public recent plays, rate limits, 24-hour retention and stop/delete revocation. Server and extension integration are tested locally; no accounts or deployment are configured. A ready-to-load ZIP is available in `downloads`.
 
 ## Version 0.1.8
 
