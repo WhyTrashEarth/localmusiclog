@@ -4,7 +4,7 @@ WhyTrashEarth · Codex x TwitchCon Hackathon 2026
 
 A local-first Brave/Chrome extension that records playback metadata from an explicitly selected YouTube Music or regular YouTube tab. Keep history private in your browser, or connect Twitch and separately approve publishing new plays to a public recent-plays page. A Twitch channel panel can link viewers to that page without viewer login.
 
-**Working development prototype · v0.2.0.** The broadcaster has confirmed the deployed flow in Brave: Twitch login, explicit sharing approval, public publishing from both YouTube Music and regular YouTube, deletion through stop-sharing, reconnecting and publishing again, and access through a Twitch panel link. These are user-reported live checks with screenshots, alongside automated tests; they do not establish reliability across all browsers, accounts or source-page variations.
+**Working development prototype · v0.2.1.** The broadcaster has confirmed the deployed flow in Brave: Twitch login, explicit sharing approval, public publishing from both YouTube Music and regular YouTube, deletion through stop-sharing, reconnecting and publishing again, and access through a Twitch panel link. These are user-reported live checks with screenshots, alongside automated tests; they do not establish reliability across all browsers, accounts or source-page variations.
 
 - **YouTube Music:** track title and page-provided artist.
 - **YouTube:** video title and uploader, labeled **YouTube video · Channel**. Uploaders are not inferred to be song artists.
@@ -12,7 +12,7 @@ A local-first Brave/Chrome extension that records playback metadata from an expl
 - **Public sharing:** only new plays after approval, newest 50 plays from the last 24 hours, with source links. Refresh the public page for updates.
 - **Control:** local history and shared history have separate deletion controls. Stop-sharing revokes publishing and deletes the public list.
 
-[View WhyTrashEarth’s recent plays](https://localmusiclog.whytrashearth.workers.dev/recent/whytrashearth) · [Download v0.2.0](downloads/local-music-log-0.2.0.zip) · [Backend setup and security model](worker/README.md)
+[View WhyTrashEarth’s recent plays](https://localmusiclog.whytrashearth.workers.dev/recent/whytrashearth) · [Download v0.2.1](downloads/local-music-log-0.2.1.zip) · [Backend setup and security model](worker/README.md)
 
 The public example may be empty when sharing is off or plays expire. This is a prototype, not a browser-store release or a generally supported hosted service.
 
@@ -30,7 +30,7 @@ Local logging needs no Cloudflare or Twitch account setup. To publish:
 
 1. Deploy the Worker using [the backend guide](worker/README.md). If connecting a GitHub repository in Cloudflare Workers Builds, the backend files must be on the selected branch. From the repository root, leave the build command blank, use `npx wrangler deploy --config worker/wrangler.jsonc` as the deploy command, and disable preview builds for this prototype. Keep the project name and Wrangler `name` consistent. Review the existing demo-specific public settings in `worker/wrangler.jsonc` and replace them for your own deployment.
 2. Register a **Confidential** Twitch application with callback `https://YOUR-WORKER.workers.dev/oauth/callback`. Configure `PUBLIC_ORIGIN` (the HTTPS origin without a path or trailing slash), `TWITCH_CLIENT_ID`, and `EXTENSION_ID` for the Worker. Add `TWITCH_CLIENT_SECRET` directly in Cloudflare's **Production runtime variables and secrets**, with type **Secret**. A build variable or suggested Wrangler snippet is not a substitute for a deployed runtime setting. Never embed real secrets in the extension or repository.
-3. Load v0.2.0 and copy its ID from `brave://extensions` or `chrome://extensions` with Developer mode enabled. It must match the backend's `EXTENSION_ID`.
+3. Load v0.2.1 and copy its ID from `brave://extensions` or `chrome://extensions` with Developer mode enabled. It must match the backend's `EXTENSION_ID`.
 4. In the extension popup, expand **Optional Twitch sharing** and enter only your backend origin, such as `https://YOUR-WORKER.workers.dev`. Do not enter `/recent/...` or `/oauth/callback` in this field.
 5. Click **Connect Twitch**, grant access to that backend host, and authorize your broadcaster account. Reopen the popup and verify the username. **Sharing should still be off.**
 6. Read the disclosure, check the approval box, and click **Enable metadata sharing**. Select your YouTube/Music tab and start a new play. Existing history is never backfilled.
@@ -67,6 +67,12 @@ No viewer login required. Only metadata I explicitly choose to share is publishe
 
 If deletion cannot reach the backend, the extension stops uploads locally and displays a retry warning; remote plays remain until successful deletion or expiry. Already viewed or copied data cannot be recalled. Stop-sharing is separate from revoking an app in Twitch settings; use the extension's stop/delete control to revoke this app's publishing session.
 
+## Interface polish · v0.2.1
+
+Version 0.2.1 includes a product-first lilac/purple popup, locally bundled Atkinson Hyperlegible Next, System/Light/Dark appearance, clearer local-history deletion wording, SVG status/control icons, and Unicode/RTL-safe metadata rendering. The appearance choice is saved locally; optional Twitch sharing and local recording behavior are preserved. See [review notes and modified files](UI-POLISH.md).
+
+Download the v0.2.1 ZIP below, or build with `npm run build` and use `dist/` for development review. The v0.2.0 ZIP remains available as the previous build. No browser-store publication has been performed. Run `npm run test:appearance` for the new Chromium fixture checks alongside the existing popup/sharing checks.
+
 ## Develop
 
 Node.js 24 and npm are used in this environment.
@@ -81,7 +87,7 @@ npm run test:browser
 
 ## Download for Brave or Chrome
 
-Download [local-music-log-0.2.0.zip](downloads/local-music-log-0.2.0.zip) using GitHub’s **Download raw file** button. Extract it. To preserve history and the extension ID, replace the files inside the folder your existing unpacked extension uses, then click **Reload** in `brave://extensions` or `chrome://extensions`. Confirm version **0.2.0**. Do not remove/reinstall the extension or select a different folder. For a new install, enable Developer mode, choose **Load unpacked**, and select the extracted folder containing `manifest.json`.
+Download [local-music-log-0.2.1.zip](downloads/local-music-log-0.2.1.zip) using GitHub’s **Download raw file** button. Extract it. To preserve history and the extension ID, replace the files inside the folder your existing unpacked extension uses, then click **Reload** in `brave://extensions` or `chrome://extensions`. Confirm version **0.2.1**. Do not remove/reinstall the extension or select a different folder. For a new install, enable Developer mode, choose **Load unpacked**, and select the extracted folder containing `manifest.json`.
 
 This is a development prototype. Sharing remains off by default; optional Twitch sharing requires the configured backend and explicit metadata approval. No Node.js installation is needed for this ZIP.
 
@@ -97,7 +103,7 @@ After refreshing/navigating the page, restarting the browser, or reloading the e
 
 ## Updating the unpacked extension
 
-Download and extract the newest ZIP. To preserve history, **replace the files in the folder your existing unpacked extension uses**, then click that extension's **Reload** button in `brave://extensions`. Confirm version **0.2.0** on its details page. Refresh YouTube Music, start a song, open the popup and select that tab again. If logging was paused, resume it. Removing/reinstalling the extension instead will erase its local history. You do not need to disable Brave Shields. If detection fails, report the exact popup status.
+Download and extract the newest ZIP. To preserve history, **replace the files in the folder your existing unpacked extension uses**, then click that extension's **Reload** button in `brave://extensions`. Confirm version **0.2.1** on its details page. Refresh YouTube Music, start a song, open the popup and select that tab again. If logging was paused, resume it. Removing/reinstalling the extension instead will erase its local history. You do not need to disable Brave Shields. If detection fails, report the exact popup status.
 
 ## Controls and permissions
 
@@ -135,6 +141,10 @@ Fixture tests validate the implementation against simulated DOM data, not YouTub
 ## Privacy
 
 No microphone, audio recording, recognition service, analytics, ads, cloud backup or export. By default the extension makes no application network requests and history remains in browser-local storage. Optional Twitch sharing requests access only to the chosen HTTPS backend. Twitch login alone does not publish: a separate metadata approval enables only newly observed plays. Public metadata is retained for 24 hours / 50 plays; stop/delete revokes publishing and removes public history. See [Phase 2 privacy and revocation details](worker/README.md). Storage is not encrypted by this app. Other people with access to your browser profile may access it. Clear history removes events; uninstalling removes extension storage. Browser loading of YouTube Music itself remains subject to that site's behavior.
+
+## Version 0.2.1
+
+Adds System/Light/Dark appearance with local persistence, bundled Atkinson Hyperlegible Next, accessible purple styling and SVG controls, clearer local-history deletion wording, a discreet contact footer, and Unicode/RTL-safe rendering. Reuses unchanged history nodes to reduce repeated popup DOM work. Detection, permissions, Twitch sharing and backend behavior remain unchanged. See [polish evidence and remaining manual checks](UI-POLISH.md). This is a downloadable development test build, not a browser-store release.
 
 ## Version 0.2.0
 

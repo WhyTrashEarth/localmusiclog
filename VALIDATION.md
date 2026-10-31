@@ -41,3 +41,8 @@ After the initial local validation, WhyTrashEarth supplied screenshots and confi
 - A standard Twitch About text panel links successfully to the public recent-plays page. The list is not embedded in Twitch and the page requires refresh for updates.
 
 These are user-reported live results with screenshot evidence, not independently executed remote checks from the Codex runtime. Other Twitch accounts/installations, browser-restart recovery, live retention/expiry, cancellation, and live network-outage recovery are not established by these screenshots. The single configured extension ID remains a distribution constraint. The root README now distinguishes self-hosted broadcaster use from a generally available hosted service.
+
+
+## Popup polish · v0.2.1
+
+The branding/theme/accessibility update passes the existing 44 tests plus `test:appearance`, `test:ui` and `test:sharing-ui`. Actual Chromium fixtures verify all three theme modes, System response to OS preference, persistent preference restoration through mocked storage across reload/browser restart, storage failures, contrast token pairs, keyboard controls, local font loading, international/RTL text, long metadata, and 360/400px layouts. The 300-entry regression retains history nodes across unchanged updates. No loaded-extension Brave or screen-reader claim is made. See [full evidence, performance measurement and limitations](UI-POLISH.md). After the initial review, the owner authorized publishing source and a v0.2.1 development test ZIP to GitHub. No store publication or GitHub Release is performed. The ZIP is built from the tested popup sources and bundled local assets.

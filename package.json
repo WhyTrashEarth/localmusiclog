@@ -1,6 +1,6 @@
 {
   "name": "local-music-log",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,7 +13,8 @@
     "test:worker": "node --test tests/worker.test.mjs",
     "dev:worker": "wrangler dev --config worker/wrangler.jsonc --local",
     "build:worker": "wrangler deploy --config worker/wrangler.jsonc --dry-run --outdir ../artifacts/worker",
-    "test:sharing-ui": "node scripts/sharing-smoke.mjs"
+    "test:sharing-ui": "node scripts/sharing-smoke.mjs",
+    "test:appearance": "node scripts/appearance-smoke.mjs"
   },
   "devDependencies": {
     "@types/chrome": "0.1.24",

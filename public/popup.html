@@ -7,21 +7,32 @@
  <link rel="stylesheet" href="popup.css">
 </head>
 <body>
+ <svg class="icon-definitions" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+   <symbol id="icon-record" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="currentColor" stroke="none"/></symbol>
+   <symbol id="icon-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" stroke-width="4"/></symbol>
+   <symbol id="icon-play" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7Z"/></symbol>
+   <symbol id="icon-trash" viewBox="0 0 24 24"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></symbol>
+   <symbol id="icon-appearance" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M12 3a9 9 0 0 1 0 18Z" fill="currentColor" stroke="none"/></symbol>
+  </defs>
+ </svg>
  <main>
   <header>
-   <p class="brand">WHYTRASHEARTH · LOCAL FIRST</p>
    <h1>Local Music Log</h1>
    <p>Local-only by default. Sharing is optional.</p>
   </header>
   <button id="select">Use this YouTube / Music tab</button>
-  <p id="status" role="status" aria-live="polite">Loading…</p>
+  <div class="recording-status" role="status" aria-live="polite">
+   <div class="status-heading"><svg id="recording-icon" class="icon" aria-hidden="true" focusable="false"><use href="#icon-record"/></svg><span id="recording-state">Ready to record</span></div>
+   <p id="status">Loading…</p>
+  </div>
   <div class="controls">
-   <button id="pause">Pause logging</button>
-   <button id="clear" aria-expanded="false" aria-controls="clear-confirmation" disabled>Clear history</button>
+   <button id="pause"><svg class="icon" aria-hidden="true" focusable="false"><use id="pause-icon" href="#icon-pause"/></svg><span id="pause-label">Pause logging</span></button>
+   <button id="clear" aria-expanded="false" aria-controls="clear-confirmation" disabled title="Delete browser-local plays; public sharing is managed separately"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-trash"/></svg><span>Clear local history</span></button>
   </div>
   <section id="clear-confirmation" class="confirmation" aria-labelledby="clear-heading" hidden>
    <h2 id="clear-heading">Clear local history?</h2>
-   <p>This permanently deletes the saved plays. Your logging setting stays the same.</p>
+   <p>This permanently deletes plays saved in this browser. Public plays and your logging setting stay unchanged. Use Optional Twitch sharing to stop sharing and delete public plays.</p>
    <div class="controls">
     <button id="cancel-clear">Keep history</button>
     <button id="confirm-clear" class="danger">Delete history</button>
@@ -36,7 +47,7 @@
    <p id="sharing-status" role="status" aria-live="polite">Sharing is off.</p>
    <section id="sharing-consent" hidden>
     <p>Approval shares only new plays: title, artist or uploader, YouTube source link, and observed time. Anyone can view them without login. Newest 50 plays are kept for up to 24 hours. Metadata can be inaccurate. Existing local history, diagnostics, playback positions and audio are never uploaded.</p>
-    <label><input id="sharing-checkbox" type="checkbox"> I approve publishing this metadata publicly.</label>
+    <label class="consent-label"><input id="sharing-checkbox" type="checkbox"> <span>I approve publishing this metadata publicly.</span></label>
     <button id="approve-sharing" disabled>Enable metadata sharing</button>
    </section>
    <p id="public-page" hidden><a id="public-link" target="_blank" rel="noreferrer">Open public recent plays</a></p>
@@ -47,7 +58,12 @@
   <p id="empty">No plays yet. Start playback in your selected tab.</p>
   <ol id="history" aria-label="Recent plays, newest first"></ol>
   <details><summary>Playback diagnostics</summary><p id="diagnostics"></p><p>Local troubleshooting only. Diagnostics are never uploaded.</p></details>
-  <footer>No audio capture. Local-only unless sharing is approved. Newest 300 local plays retained.<br>Development prototype · v0.2.0</footer>
+  <div class="appearance-control">
+   <label for="appearance"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-appearance"/></svg>Appearance</label>
+   <select id="appearance" aria-describedby="appearance-status"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select>
+  </div>
+  <p id="appearance-status" role="status" aria-live="polite"></p>
+  <footer><p>No audio capture. Local-only unless sharing is approved. Newest 300 local plays retained.</p><p class="prototype">Development prototype · v0.2.1</p><a href="mailto:WhyTrashEarth@protonmail.com">Contact WhyTrashEarth</a></footer>
  </main>
  <script type="module" src="popup.js"></script>
 </body>
