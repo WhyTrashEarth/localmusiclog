@@ -1,6 +1,6 @@
 # Phase 2 backend
 
-Nothing here deploys automatically. Local development and automated tests need no Cloudflare account, Twitch registration, or real secrets.
+Local development and automated tests need no Cloudflare account, Twitch registration, or real secrets. The demo was deployed through Cloudflare Workers Builds connected to GitHub; pushes to its configured production branch can trigger deployment. Local build/test commands do not deploy. The repository currently contains the demo Worker name and public OAuth settings; replace those values before deploying a separate instance.
 
 From `/workspace/localmusiclog` (or your checkout root), use Node 24:
 
@@ -32,7 +32,7 @@ The SQLite Durable Object coordinator serializes state changes, including OAuth 
 
 ## Account configuration, only when ready for a live test
 
-The backend is prepared before this step. No real account setup was performed by Codex.
+The broadcaster configured the live demo through the Cloudflare and Twitch dashboards and confirmed the end-to-end flow in Brave. The following instructions apply to another deployment; real secrets belong in its encrypted Worker settings. Only one browser extension ID is allowed per backend, so the demo is not a turnkey shared service for arbitrary unpacked installations.
 
 1. Choose the deployed Worker HTTPS origin and the unpacked extension ID shown by Chrome/Brave. The extension identity redirect is `https://<extension-id>.chromiumapp.org/`. Extension IDs may differ across machines; configure the exact ID being tested. Only one ID is allowed per backend.
 2. Register a confidential Twitch app with callback **`https://<worker-origin>/oauth/callback`**. Keep the client secret server-side. No viewer app/login or extra Twitch API scopes are needed.
@@ -41,4 +41,4 @@ The backend is prepared before this step. No real account setup was performed by
 5. Build/reload the extension, enter the HTTPS backend origin under Optional Twitch sharing, grant only that host, and connect Twitch. Confirm the broadcaster login and that sharing remains off. Check public history is empty. Approve metadata sharing, then play a new item. Confirm channel attribution, public title/source/time, no backfill, and viewer access without login.
 6. Press stop/delete. Refresh the public page to confirm the list is empty; replaying the old capability must return 401. Repeat with a network outage: uploads stop locally and the UI must clearly require a deletion retry. Test cancellation, browser restart, expiry, and the actual Brave/Chrome identity flow.
 
-Real Twitch consent/callback behavior and a deployed Cloudflare instance remain live integration checks. Mock tests cannot establish that account configuration, identity redirects, or live YouTube metadata are correct.
+User-reported live checks with screenshots now cover the deployed Twitch consent/callback, sharing approval, publishing both source kinds, stop/delete, reconnect and resumed publishing, and a Twitch channel panel link. These checks do not establish behavior for other installations, browsers or Twitch accounts. Cancellation, browser-restart recovery, live expiry/retention, network-outage recovery and broader metadata edge cases still need live validation; mock tests cover their documented boundaries only where listed in the test evidence.

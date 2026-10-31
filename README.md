@@ -2,7 +2,70 @@
 
 WhyTrashEarth · Codex x TwitchCon Hackathon 2026
 
-A local-first Chromium Manifest V3 extension for an explicitly selected YouTube Music or YouTube tab. **Development prototype:** YouTube Music logging and repeat-one have been confirmed by the user in Brave. Regular YouTube watch-page support is new and awaits live-browser verification. Phase 2 Twitch sharing and the Cloudflare Worker backend are implemented for local testing; neither a Worker deployment nor a Twitch app is configured. See [backend setup and security model](worker/README.md).
+A local-first Brave/Chrome extension that records playback metadata from an explicitly selected YouTube Music or regular YouTube tab. Keep history private in your browser, or connect Twitch and separately approve publishing new plays to a public recent-plays page. A Twitch channel panel can link viewers to that page without viewer login.
+
+**Working development prototype · v0.2.0.** The broadcaster has confirmed the deployed flow in Brave: Twitch login, explicit sharing approval, public publishing from both YouTube Music and regular YouTube, deletion through stop-sharing, reconnecting and publishing again, and access through a Twitch panel link. These are user-reported live checks with screenshots, alongside automated tests; they do not establish reliability across all browsers, accounts or source-page variations.
+
+- **YouTube Music:** track title and page-provided artist.
+- **YouTube:** video title and uploader, labeled **YouTube video · Channel**. Uploaders are not inferred to be song artists.
+- **Local-first:** sharing starts off; Twitch login alone does not upload history. No audio is captured or uploaded.
+- **Public sharing:** only new plays after approval, newest 50 plays from the last 24 hours, with source links. Refresh the public page for updates.
+- **Control:** local history and shared history have separate deletion controls. Stop-sharing revokes publishing and deletes the public list.
+
+[View WhyTrashEarth’s recent plays](https://localmusiclog.whytrashearth.workers.dev/recent/whytrashearth) · [Download v0.2.0](downloads/local-music-log-0.2.0.zip) · [Backend setup and security model](worker/README.md)
+
+The public example may be empty when sharing is off or plays expire. This is a prototype, not a browser-store release or a generally supported hosted service.
+
+## Can another broadcaster use this?
+
+**Yes, with configuration.** Publishing is bound to the Twitch account that signs in; it is not hardcoded to WhyTrashEarth. Each broadcaster gets a public page at `/recent/<their-lowercase-twitch-login>` and can add its link to their own Twitch panel.
+
+**The current deployment is not plug-and-play for arbitrary installations.** The backend permits exactly one configured browser `EXTENSION_ID`. An unpacked extension's ID can differ on another computer or if it is loaded from a different folder. Installing the ZIP alone does not guarantee it can authenticate against the example backend. Do not replace the demo backend's extension ID to accommodate another installation; that would prevent the existing installation from completing OAuth.
+
+For another broadcaster, the documented path is to deploy their own Cloudflare Worker, register a confidential Twitch app with that Worker's callback, configure their own browser extension ID, then connect their Twitch account and approve sharing. They do not need to be streaming to use it. Their viewers only need the public link. See the setup below and the [backend guide](worker/README.md). A stable distributed extension identity and a supported multi-installation onboarding flow remain future work; other broadcasters have not yet been live-tested.
+
+## Optional Twitch sharing setup
+
+Local logging needs no Cloudflare or Twitch account setup. To publish:
+
+1. Deploy the Worker using [the backend guide](worker/README.md). If connecting a GitHub repository in Cloudflare Workers Builds, the backend files must be on the selected branch. From the repository root, leave the build command blank, use `npx wrangler deploy --config worker/wrangler.jsonc` as the deploy command, and disable preview builds for this prototype. Keep the project name and Wrangler `name` consistent. Review the existing demo-specific public settings in `worker/wrangler.jsonc` and replace them for your own deployment.
+2. Register a **Confidential** Twitch application with callback `https://YOUR-WORKER.workers.dev/oauth/callback`. Configure `PUBLIC_ORIGIN` (the HTTPS origin without a path or trailing slash), `TWITCH_CLIENT_ID`, and `EXTENSION_ID` for the Worker. Add `TWITCH_CLIENT_SECRET` directly in Cloudflare's **Production runtime variables and secrets**, with type **Secret**. A build variable or suggested Wrangler snippet is not a substitute for a deployed runtime setting. Never embed real secrets in the extension or repository.
+3. Load v0.2.0 and copy its ID from `brave://extensions` or `chrome://extensions` with Developer mode enabled. It must match the backend's `EXTENSION_ID`.
+4. In the extension popup, expand **Optional Twitch sharing** and enter only your backend origin, such as `https://YOUR-WORKER.workers.dev`. Do not enter `/recent/...` or `/oauth/callback` in this field.
+5. Click **Connect Twitch**, grant access to that backend host, and authorize your broadcaster account. Reopen the popup and verify the username. **Sharing should still be off.**
+6. Read the disclosure, check the approval box, and click **Enable metadata sharing**. Select your YouTube/Music tab and start a new play. Existing history is never backfilled.
+7. Open `https://YOUR-WORKER.workers.dev/recent/YOUR_LOWERCASE_TWITCH_LOGIN` to see newly shared plays. Refresh for updates.
+
+The runtime publishing credential is held in browser session storage. Browser restart requires reconnecting and fresh approval; the server session expires after seven days. Reconnecting also replaces the previous channel session and clears its public list. A full source-page reload or extension reload requires selecting the source tab again.
+
+## Add a Twitch channel panel
+
+This is a standard Twitch **text/image panel containing a link**. It does not embed a live list inside Twitch; an embedded panel would require a separate Twitch Extension. No Twitch Extension has been registered or released by this project.
+
+1. Open your Twitch channel's **About** page while logged in.
+2. Turn on **Edit Panels**, click the large **+**, and choose **Add a Text or Image Panel**.
+3. Use a title such as **What's Playing? · Local Music Log**. An image is optional.
+4. Paste the following into **Description**, replacing the URL with your own public page:
+
+```markdown
+See my recently shared YouTube Music tracks and YouTube videos.
+
+[Open my recent plays](https://YOUR-WORKER.workers.dev/recent/YOUR_LOWERCASE_TWITCH_LOGIN)
+
+No viewer login required. Only metadata I explicitly choose to share is published.
+```
+
+5. Scroll within the form, click **Submit**, turn off **Edit Panels**, and test the link. The public page opens outside Twitch. It requires a manual refresh for updates.
+
+## Clear local history vs. remove shared plays
+
+| Control | Effect |
+| --- | --- |
+| **Clear history** | Deletes the extension's browser-local history. It does not delete already published plays or stop sharing. |
+| **Pause logging** | Stops new local entries and therefore new uploads. Existing public entries remain until deleted or expired. |
+| **Stop sharing and delete public plays** | Stops uploads locally, revokes the backend session, and deletes the public list when the request succeeds. Refresh the public page to see the change. |
+
+If deletion cannot reach the backend, the extension stops uploads locally and displays a retry warning; remote plays remain until successful deletion or expiry. Already viewed or copied data cannot be recalled. Stop-sharing is separate from revoking an app in Twitch settings; use the extension's stop/delete control to revoke this app's publishing session.
 
 ## Develop
 
@@ -14,7 +77,7 @@ npm test
 npm run test:browser
 ```
 
-`npm test` builds the extension and runs history, observer, metadata detection and background integration checks. The browser smoke test uses `/usr/bin/chromium`, loads the unpacked extension, and checks the popup, persistence and rejection of an unsupported tab. It requires an environment where Chromium subprocesses can start.
+`npm test` builds the extension and runs history, observer, metadata detection, background integration, publishing-client, and Worker tests. The Worker suite runs with mocked Twitch responses in Miniflare/workerd. `npm run build:worker` bundles without deploying. `npm run test:ui` and `npm run test:sharing-ui` exercise popup fixtures in Chromium. The loaded-extension smoke test (`npm run test:browser`) requires a browser environment that permits unpacked extensions; managed Chromium policy blocks it in the development cloud environment. See [validation evidence and limits](VALIDATION.md).
 
 ## Download for Brave or Chrome
 
@@ -30,7 +93,7 @@ This is a development prototype. Sharing remains off by default; optional Twitch
 4. Open YouTube Music or a regular YouTube watch page, open the extension popup, and press **Use this YouTube / Music tab**.
 5. Play a song. Wait for valid player metadata; reopen the popup to see history.
 
-After refreshing/navigating the page, restarting the browser, or reloading the extension, select the tab again. There is no persistent website host permission and no automatic injection into other tabs.
+After refreshing/navigating the page, restarting the browser, or reloading the extension, select the tab again. There is no persistent YouTube host permission and no automatic injection into other tabs. Optional backend access is separate and requested only when connecting Twitch.
 
 ## Updating the unpacked extension
 
@@ -40,7 +103,9 @@ Download and extract the newest ZIP. To preserve history, **replace the files in
 
 - `activeTab`: temporary access to the tab you select through the extension action.
 - `scripting`: install the metadata observer into that selected YouTube Music or YouTube page.
-- `storage`: keep history, selection and logging state in `chrome.storage.local`.
+- `storage`: keep history, selection and logging state in `chrome.storage.local`; runtime publishing credentials use `chrome.storage.session`.
+- `identity`: run the optional Twitch authorization flow.
+- Optional HTTPS host access: declared for configurable backends, requested at runtime only for the backend origin the broadcaster chooses. No persistent YouTube host permission is requested.
 
 Pause logging does not pause music. Clear history opens an inline confirmation panel with **Keep history** and **Delete history** controls. Escape cancels; keyboard focus is not trapped and no native browser dialog is opened. Successful deletion announces its result; a failed deletion leaves a retry option. Clear history deletes stored events while retaining the current playback marker to prevent immediately re-adding the same play. The newest 300 events are retained; older entries are removed first. Timestamps mean **observed at**, not the exact start time of a song already playing when selection occurs.
 
@@ -73,7 +138,7 @@ No microphone, audio recording, recognition service, analytics, ads, cloud backu
 
 ## Version 0.2.0
 
-Adds opt-in Twitch broadcaster authentication, explicit metadata approval, channel-bound Worker publishing, public recent plays, rate limits, 24-hour retention and stop/delete revocation. Server and extension integration are tested locally; no accounts or deployment are configured. A ready-to-load ZIP is available in `downloads`.
+Adds opt-in Twitch broadcaster authentication, explicit metadata approval, channel-bound Worker publishing, public recent plays, rate limits, 24-hour retention and stop/delete revocation. The broadcaster has also confirmed the deployed Twitch login, opt-in publishing, public reads, stop/delete, reconnect, and Twitch panel-link flow in Brave. A ready-to-load ZIP is available in `downloads`.
 
 ## Version 0.1.8
 
@@ -109,9 +174,9 @@ Replaces the blocking native clear-history confirmation, reported to leave Brave
 
 Addresses restrictive artist-link detection and track identity while browsing album/playlist pages. Reselecting replaces the observer timer. Missing metadata is reported field by field; ads detected by the player are skipped. `npm run test:player` exercises the serialized detector in real Chromium against a local player fixture. Actual Brave/YouTube Music behavior still requires verification.
 
-## Next phases
+## Next steps
 
-Phase 2 implements broadcaster Twitch OAuth, channel-bound writes, separate sharing approval, short-retention Cloudflare storage, rate limits, stop/delete revocation, and a public read-only recent-plays page without viewer login. Local-only remains the default. See [implementation, tests, limitations and later account setup](worker/README.md). Real Twitch/Cloudflare and source-metadata checks remain outstanding.
+Polish the extension and public-page interface, make the local/public deletion distinction clearer, and record the hackathon demo. Additional-browser/account testing, broader source-metadata edge cases, and multi-installation onboarding remain outstanding. The current Twitch panel links to the public page; embedded Twitch Extensions and automatic page updates are not implemented.
 
 ## Submission record
 

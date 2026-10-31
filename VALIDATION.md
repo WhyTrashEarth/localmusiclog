@@ -25,4 +25,19 @@ These results do not establish Phase 1 completion. See README for the manual acc
 - Local `npm run dev:worker` startup verified using HTTP requests: `/health` returns 200/ok, `/api/recent/broadcaster` returns an empty list, and `/oauth/start` returns 503 while OAuth is unconfigured.
 - `npm run test:ui` and `npm run test:sharing-ui`: pass in Chromium with mocked browser APIs. Cover existing history controls and the new chosen-host permission, broadcaster login, separate approval checkbox, public-page link, and offline deletion warning/retry.
 - `npm run test:browser`: **blocked by environment policy**, not passed. The installed Chromium has managed `ExtensionInstallBlocklist: ["*"]`; CDP reports that unpacked extensions are disabled by the administrator. Policy was not changed.
-- No Worker deployment, Twitch registration, real credentials, live OAuth callback, or live-source metadata verification was performed. The existing v0.1.8 ZIP is unchanged; build source to test v0.2.0. See `worker/README.md` for later live checks and documented security/privacy limits.
+- During this initial local validation, no Worker deployment, Twitch registration, real credentials, live OAuth callback, or live-source metadata verification was performed. The subsequent deployment and ready-to-load v0.2.0 ZIP are documented below and in the root README. See `worker/README.md` for setup and security/privacy limits.
+
+## Broadcaster-reported deployed validation
+
+After the initial local validation, WhyTrashEarth supplied screenshots and confirmed:
+
+- Successful Cloudflare GitHub-connected deployment and runtime configuration, followed by the real Twitch consent flow in Brave with extension v0.2.0 and the configured extension ID.
+- Login initially leaves sharing off; separate metadata approval enables public publishing.
+- A newly observed YouTube Music track appears locally and on the public channel page with artist attribution.
+- Regular YouTube entries appear as videos with uploader/channel attribution, alongside distinct YouTube Music entries.
+- Clearing local history leaves the public list intact, consistent with the separate controls.
+- Stop-sharing/delete followed by refreshing the public page produces **No shared plays**. This confirms visible public deletion; screenshots alone do not prove every subsequent unauthorized request is rejected (the automated suite covers that boundary).
+- Reconnecting and approving sharing again allows new public entries.
+- A standard Twitch About text panel links successfully to the public recent-plays page. The list is not embedded in Twitch and the page requires refresh for updates.
+
+These are user-reported live results with screenshot evidence, not independently executed remote checks from the Codex runtime. Other Twitch accounts/installations, browser-restart recovery, live retention/expiry, cancellation, and live network-outage recovery are not established by these screenshots. The single configured extension ID remains a distribution constraint. The root README now distinguishes self-hosted broadcaster use from a generally available hosted service.
